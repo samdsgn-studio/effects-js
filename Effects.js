@@ -200,6 +200,3 @@ window.addEventListener("load", () => {
   ScrollTrigger.refresh();
 });
 // ======= FINE SPLIT + COUNTER =======
-
-ClipboardEvent
-
