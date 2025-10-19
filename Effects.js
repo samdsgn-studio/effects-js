@@ -187,3 +187,54 @@ window.addEventListener("load", () => {
   });
 });
 // ======= FINE SPLIT + COUNTER =======
+
+
+// ======= INIZIO EFFETTO MASK IMAGE =======
+window.addEventListener("load", () => {
+  (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+    if (!window.gsap) { console.error("GSAP not loaded"); return; }
+    if (window.ScrollTrigger) { gsap.registerPlugin(ScrollTrigger); } else { console.error("ScrollTrigger not loaded"); return; }
+
+    // Stato iniziale: maschera chiusa dal basso
+    gsap.set(".img-reveal", {
+      clipPath: "inset(100% 0% 0% 0%)",
+      willChange: "clip-path, opacity, transform",
+      autoAlpha: 0,
+      y: 60
+    });
+
+    // Animazione batch
+    ScrollTrigger.batch(".img-reveal", {
+      start: "top 85%",
+      onEnter: (batch) => {
+        gsap.to(batch, {
+          clipPath: "inset(0% 0% 0% 0%)",
+          autoAlpha: 1,
+          y: 0,
+          duration: 1.6,
+          ease: "power3.out",
+          stagger: 0.25
+        });
+      },
+      onEnterBack: (batch) => {
+        gsap.to(batch, {
+          clipPath: "inset(0% 0% 0% 0%)",
+          autoAlpha: 1,
+          y: 0,
+          duration: 1.6,
+          ease: "power3.out",
+          stagger: 0.25
+        });
+      },
+      onLeave: (batch) => {
+        gsap.set(batch, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+      },
+      onLeaveBack: (batch) => {
+        gsap.set(batch, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+      }
+    });
+
+    ScrollTrigger.refresh();
+  });
+});
+// ======= FINE EFFETTO MASK IMAGE =======
