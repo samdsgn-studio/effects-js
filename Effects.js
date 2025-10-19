@@ -201,4 +201,5 @@ window.addEventListener("load", () => {
 });
 // ======= FINE SPLIT + COUNTER =======
 
+ClipboardEvent
 
