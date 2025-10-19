@@ -1,11 +1,14 @@
 // ======= INIZIO SCRAMBLE =======
 document.addEventListener("DOMContentLoaded", function () {
+
+  // ✅ Registra il plugin se disponibile
   if (window.gsap && window.ScrambleTextPlugin) {
     gsap.registerPlugin(ScrambleTextPlugin);
   } else {
     console.warn("GSAP/ScrambleTextPlugin non trovati: includi prima gsap.min.js e ScrambleTextPlugin.min.js");
     return;
   }
+
   const glitchTexts = document.querySelectorAll('.glitch, [data-effect="scramble"]');
 
   glitchTexts.forEach(el => {
@@ -38,5 +41,3 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 // ======= FINE SCRAMBLE =======
-
-
