@@ -6,31 +6,63 @@ window.__EFFECTS_LIBS_READY__ = Promise.resolve();
 // ======= INIZIO SCRAMBLE =======
 document.addEventListener("DOMContentLoaded", function () {
   (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+    const CHARS = "0123456789!@#$%^&*";
+    function fallbackScramble(el, finalText, durMs = 600, revealDelayMs = 200) {
+      let start = null, raf;
+      const len = finalText.length;
+      const rand = () => CHARS[Math.floor(Math.random() * CHARS.length)];
+      const tick = (ts) => {
+        if (start === null) start = ts;
+        const t = ts - start - revealDelayMs;
+        const p = Math.max(0, Math.min(1, t / durMs));
+        let out = "";
+        for (let i = 0; i < len; i++) {
+          const thresh = i / Math.max(1, len - 1);
+          out += (p >= thresh ? finalText[i] : rand());
+        }
+        el.textContent = out;
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      el._scrambleCancel && el._scrambleCancel();
+      raf = requestAnimationFrame(tick);
+      el._scrambleCancel = () => cancelAnimationFrame(raf);
+    }
+
+    // registra i plugin se presenti
+    if (window.gsap && window.ScrambleTextPlugin) gsap.registerPlugin(ScrambleTextPlugin);
+
     const glitchTexts = document.querySelectorAll('.glitch, [data-effect="scramble"]');
     glitchTexts.forEach(el => {
       const originalText = el.textContent;
+
       el.addEventListener("mouseenter", () => {
-        gsap.to(el, {
-          duration: 0.6,
-          scrambleText: {
-            text: originalText,
-            chars: "0123456789!@#$%^&*",
-            revealDelay: 0.2,
-            speed: 0.3
-          },
-          ease: "none"
-        });
+        if (window.ScrambleTextPlugin) {
+          gsap.to(el, {
+            duration: 0.6,
+            scrambleText: {
+              text: originalText,
+              chars: CHARS,
+              revealDelay: 0.2,
+              speed: 0.3
+            },
+            ease: "none"
+          });
+        } else {
+          fallbackScramble(el, originalText, 600, 200);
+        }
       });
+
       el.addEventListener("mouseleave", () => {
-        gsap.to(el, {
-          duration: 0.4,
-          scrambleText: {
-            text: originalText,
-            chars: "0123456789!@#$%^&*",
-            speed: 0.4
-          },
-          ease: "none"
-        });
+        if (window.ScrambleTextPlugin) {
+          gsap.to(el, {
+            duration: 0.4,
+            scrambleText: { text: originalText, chars: CHARS, speed: 0.4 },
+            ease: "none"
+          });
+        } else {
+          el._scrambleCancel && el._scrambleCancel();
+          el.textContent = originalText;
+        }
       });
     });
   });
