@@ -82,5 +82,24 @@ Includi `mask-image.js` e utilizza `applyMask(imageElement, maskElement)`.
 
 ---------------------------------------------------------------------------
 
+## 5️⃣ Effetto Fade From Top
+**Descrizione:**  
+Anima gli elementi con la classe `.fade-from-top` facendoli apparire dall’alto con un effetto di fade-in. L’animazione sfrutta GSAP per transizioni fluide.
+
+**Personalizzazione:**  
+Puoi aggiungere un attributo opzionale `delay` o `data-delay` (in secondi) per impostare un ritardo personalizzato sull’animazione di ciascun elemento.
+
+**Requisiti:**  
+Richiede GSAP (versione 3.12 o superiore), caricata tramite CDN:
+https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js
+
+
+**Esempio:**  
+```html
+<div class="fade-from-top" delay="0.4">Testo che appare dall’alto</div>
+<div class="fade-from-top" data-delay="1.2">Altro elemento con ritardo</div>
+<script src="https://unpkg.com/gsap/dist/gsap.min.js"></script>
+<script src="fade-from-top.js"></script>
+```
 
 © Sam Dsgn — Effects.js
