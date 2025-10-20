@@ -1,4 +1,12 @@
 (function (root, factory) {
+  // Protezione: se questo <script> venisse iniettato come HTML visibile nel DOM,
+  // nascondilo per evitare che compaia come testo nel canvas/Editor.
+  try {
+    var __scr = document.currentScript;
+    if (__scr && __scr.parentNode && __scr.parentNode.tagName !== 'HEAD') {
+      __scr.style.display = 'none';
+    }
+  } catch (e) {}
   if (typeof define === 'function' && define.amd) {
     define([], factory);
   } else if (typeof module === 'object' && module.exports) {
