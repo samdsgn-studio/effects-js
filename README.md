@@ -43,13 +43,13 @@ Includi `split-counter.js` e chiama `splitCounter(element, count)`.
 Applica una maschera animata su un’immagine per effetti visivi dinamici.
 
 **Uso:**  
-Includi `mask-image.js` e utilizza `applyMask(imageElement, maskElement)`.
+Includi `img-reveal` e utilizza `applyMask(imageElement, maskElement)`.
 
 **Esempio:**  
 ```html
 <img id="image" src="photo.jpg" />
 <div id="mask"></div>
-<script src="mask-image.js"></script>
+<script src="img-reveal"></script>
 <script>
   const img = document.getElementById('image');
   const mask = document.getElementById('mask');
