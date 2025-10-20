@@ -238,3 +238,32 @@ window.addEventListener("load", () => {
   });
 });
 // ======= FINE EFFETTO MASK IMAGE =======
+
+
+
+// ======= INIZIO FADE FROM TOP =======
+document.addEventListener("DOMContentLoaded", function () {
+  (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+    if (!window.gsap) { console.error("GSAP not loaded"); return; }
+
+    const nodes = document.querySelectorAll(".fade-from-top");
+    nodes.forEach(el => {
+      // supporta sia delay che data-delay (in secondi)
+      const delayAttr = el.getAttribute("delay") ?? el.getAttribute("data-delay");
+      const delay = parseFloat(delayAttr) || 0;
+      
+      // stato iniziale
+      gsap.set(el, { y: "-100%", autoAlpha: 0, willChange: "transform,opacity" });
+
+      // animazione
+      gsap.to(el, {
+        y: "0%",
+        autoAlpha: 1,
+        duration: 1.2,
+        ease: "power4.out",
+        delay: delay
+      });
+    });
+  });
+});
+// ======= FINE FADE FROM TOP =======
