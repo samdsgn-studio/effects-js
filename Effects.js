@@ -1,11 +1,5 @@
 // ======= INIZIO LOADER LIBRERIE =======
 // Le librerie GSAP sono già caricate da Webflow, quindi non serve ricaricarle.
-if (!window.gsap) {
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js';
-  script.defer = true;
-  document.head.appendChild(script);
-}
 window.__EFFECTS_LIBS_READY__ = Promise.resolve();
 // ======= FINE LOADER LIBRERIE =======
 
@@ -250,14 +244,6 @@ window.addEventListener("load", () => {
 // ======= INIZIO FADE FROM TOP =======
 (function(){
   function initFadeFromTop(){
-    const IN_WEBFLOW_UI = window.Webflow && (Webflow.env('design') || Webflow.env('editor'));
-    if (IN_WEBFLOW_UI) {
-      document.querySelectorAll('.fade-from-top').forEach(el => {
-        el.style.opacity = '1';
-        el.style.transform = 'none';
-      });
-      return;
-    }
     if (!window.gsap) { console.error("GSAP not loaded for fade-from-top"); return; }
     const nodes = document.querySelectorAll('.fade-from-top');
     nodes.forEach(el => {
