@@ -253,13 +253,14 @@ window.addEventListener("load", () => {
       const delayAttr = el.getAttribute('delay') ?? el.getAttribute('data-delay');
       const delay = parseFloat(delayAttr) || 0;
 
-      gsap.set(el, { y: '-100%', autoAlpha: 0, willChange: 'transform,opacity' });
-      gsap.to(el, {
-        y: '0%',
-        autoAlpha: 1,
+      // Animazione con GSAP.from per garantire visibilità in Designer e Canvas
+      gsap.from(el, {
+        yPercent: -100,
+        autoAlpha: 0,
         duration: 1.2,
         ease: 'power4.out',
-        delay: delay
+        delay: delay,
+        overwrite: 'auto'
       });
     });
   }
