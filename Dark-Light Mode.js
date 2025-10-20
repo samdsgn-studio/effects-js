@@ -1,26 +1,3 @@
-
-
-/* ThemeToggle (Webflow + Lottie) v1.0
- * Gestione dark/light mode con:
- *  - Persistenza in localStorage
- *  - Classe su <html> (default: .dark)
- *  - Aggiornamento aria-pressed sui toggle button
- *  - Sync con Lottie di Webflow (wrapper con classe .darklight-lottie)
- *  - API pubbliche: ThemeToggle.init, ThemeToggle.toggle, ThemeToggle.setMode, ThemeToggle.resyncLottie
- *
- * USO RAPIDO:
- *   // (consigliato in <head>) anti-FOUC
- *   // <script>(function(){var m=localStorage.getItem('theme');if(m==='dark'){document.documentElement.classList.add('dark');}})();</script>
- *
- *   // Includi questo file prima di </body> e poi inizializza:
- *   ThemeToggle.init({
- *     toggleSelector: '#theme-toggle',      // o '.theme-toggle' per più bottoni
- *     lottieSelector: '.darklight-lottie',  // classe wrapper della Lottie in Webflow
- *     progress: { light: 0, dark: 50 },     // percentuali (sole/luna) nella timeline
- *     respectSystem: true,                  // opzionale: rispetta prefers-color-scheme
- *     reduceMotion: false                   // true => salta animazione (jump al frame)
- *   });
- */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([], factory);
