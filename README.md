@@ -1,63 +1,86 @@
-# Effects.js — Guida rapida integrazione Webflow
+# Effects.js
 
-## 1️⃣ Effetto Scramble (testo glitch)
+## 1️⃣ Effetto Scramble  
+**Descrizione:**  
+Un effetto di animazione testo che mostra lettere casuali che si trasformano gradualmente nel testo finale.
+
+**Uso:**  
+Includi `scramble.js` nel tuo progetto e chiama la funzione `scrambleText(element, text)` passando l’elemento DOM e il testo da mostrare.
+
+**Esempio:**  
+```html
+<div id="scramble"></div>
+<script src="scramble.js"></script>
+<script>
+  const el = document.getElementById('scramble');
+  scrambleText(el, 'Hello World!');
+</script>
+```
+
+---
+
+## 2️⃣ Effetto Split + Counter  
+**Descrizione:**  
+Divide il testo in singole lettere animate e mostra un contatore incrementale sincronizzato.
+
+**Uso:**  
+Includi `split-counter.js` e chiama `splitCounter(element, count)`.
+
+**Esempio:**  
+```html
+<div id="split-counter">Count: 0</div>
+<script src="split-counter.js"></script>
+<script>
+  const el = document.getElementById('split-counter');
+  splitCounter(el, 100);
+</script>
+```
+
+---
+
+## 3️⃣ Effetto Mask Image  
+**Descrizione:**  
+Applica una maschera animata su un’immagine per effetti visivi dinamici.
+
+**Uso:**  
+Includi `mask-image.js` e utilizza `applyMask(imageElement, maskElement)`.
+
+**Esempio:**  
+```html
+<img id="image" src="photo.jpg" />
+<div id="mask"></div>
+<script src="mask-image.js"></script>
+<script>
+  const img = document.getElementById('image');
+  const mask = document.getElementById('mask');
+  applyMask(img, mask);
+</script>
+```
+
+---
+
+## Requisiti librerie  
+- [GSAP](https://greensock.com/gsap/) per animazioni fluide.  
+- [Lottie](https://airbnb.io/lottie/#/) per animazioni vettoriali.  
+
+---
+
+## 4️⃣ Effetto Dark / Light Mode
 **Attiva con:**
-- `class="glitch"` **oppure**
-- `data-effect="scramble"`
+- un bottone con `id="theme-toggle"`
+- una Lottie con classe `.darklight-lottie`
 
-> Il testo si “scrambla” al passaggio del mouse.  
-> Funziona anche senza ScrambleTextPlugin (fallback incluso).
-
-**Esempio:**
-```html
-<h3 class="glitch">Testo animato</h3>
-```
-
----
-
-## 2️⃣ Effetto Split + Counter
-**Contenitore principale:**  
-`class="split"`
-
-**Attributi opzionali sul contenitore:**
-- `data-delay="0.3"` → ritardo avvio animazione (sec)
-
-**Attributi per numeri animati:**
-- `data-count="1500"` → valore finale
-- `data-decimals="1"` → cifre decimali
-- `data-duration="1.6"` → durata in secondi
-- `data-delay="0.4"` → ritardo solo per quel numero
+> Puoi includere lo script `theme-toggle.js` prima di `</body>`.  
+> La preferenza del tema viene salvata automaticamente e sincronizzata con l’animazione.
 
 **Esempio:**
 ```html
-<div class="split">
-  <p>+<span data-count="2500" data-duration="1.4"></span> clienti soddisfatti</p>
-</div>
+<button id="theme-toggle">Toggle Theme</button>
+<div class="darklight-lottie"></div>
+<script src="theme-toggle.js"></script>
 ```
 
----
+---------------------------------------------------------------------------
 
-## 3️⃣ Effetto Mask Image (rivelazione)
-**Classe:**  
-`class="img-reveal"`
 
-> Rivela immagini con clip-path e animazione allo scroll.
-
-**Esempio:**
-```html
-<div class="img-reveal">
-  <img src="immagine.jpg" alt="">
-</div>
-```
-
----
-
-## 🔧 Requisiti librerie
-- GSAP (già incluso in Webflow)
-- ScrollTrigger  
-- SplitText *(opzionale)*  
-- ScrambleTextPlugin *(opzionale)*
-
----
-
-© SR Designs — Effects.js
+© Sam Dsgn — Effects.js
