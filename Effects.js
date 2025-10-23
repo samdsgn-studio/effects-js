@@ -289,10 +289,18 @@ window.addEventListener("load", () => {
 }
 
 .animate-line {
-  display: inline-block;
+  display: inline-block !important;
   position: relative;
   overflow-x: hidden;
   color: inherit;
+  width: max-content;
+  max-width: 100%;
+  padding: 0 !important;
+  flex: 0 0 auto;
+}
+
+@supports not (width: max-content) {
+  .animate-line { display: inline !important; }
 }
 
 .animate-line::after {
