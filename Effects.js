@@ -274,3 +274,51 @@ window.addEventListener("load", () => {
   document.addEventListener('webflow:load', initFadeFromTop);
 })();
 // ======= FINE FADE FROM TOP =======
+
+
+// ======= INIZIO ANIMATE LINE =======
+(function(){
+  function initAnimateLine(){
+    if (document.querySelector('style[data-animate-line]')) return; // evita doppio inserimento
+    const style = document.createElement('style');
+    style.setAttribute('data-animate-line', 'true');
+    style.textContent = `
+:root {
+  --animate-line-speed: 0.3s;
+  --animate-line-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.animate-line {
+  display: inline-block;
+  position: relative;
+  overflow-x: hidden;
+  color: inherit;
+}
+
+.animate-line::after {
+  pointer-events: none;
+  background-color: currentColor;
+  content: "";
+  height: 1.5px;
+  position: absolute;
+  left: auto;
+  top: auto;
+  right: 0%;
+  bottom: 0%;
+  width: 0%;
+  transition: width var(--animate-line-speed) var(--animate-line-ease);
+}
+
+.animate-line:hover::after {
+  width: 100%;
+  right: auto;
+  left: 0%;
+}
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.addEventListener('DOMContentLoaded', initAnimateLine);
+  window.addEventListener('load', initAnimateLine);
+})();
+// ======= FINE ANIMATE LINE =======
