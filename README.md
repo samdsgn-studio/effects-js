@@ -82,6 +82,7 @@ Includi `img-reveal` e utilizza `applyMask(imageElement, maskElement)`.
 
 ---------------------------------------------------------------------------
 
+
 ## 5️⃣ Effetto Fade From Top
 **Descrizione:**  
 Anima gli elementi con la classe `.fade-from-top` facendoli apparire dall’alto con un effetto di fade-in. L’animazione sfrutta GSAP per transizioni fluide.
@@ -100,6 +101,26 @@ https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js
 <div class="fade-from-top" data-delay="1.2">Altro elemento con ritardo</div>
 <script src="https://unpkg.com/gsap/dist/gsap.min.js"></script>
 <script src="fade-from-top.js"></script>
+```
+
+---
+
+## 6️⃣ Effetto Animate Line
+**Descrizione:**  
+Aggiunge una linea animata sotto il testo quando viene passato con il cursore. Ideale per link o testi evidenziati.
+
+**Uso:**  
+Aggiungi la classe `.animate-line` a un elemento inline o a un link (`<a>`). Lo script applica automaticamente lo stile e l’animazione.
+
+**Personalizzazione:**  
+Puoi modificare velocità ed easing tramite variabili CSS:
+- `--animate-line-speed`: imposta la durata dell’animazione (default `0.3s`)
+- `--animate-line-ease`: imposta la curva di easing (default `cubic-bezier(0.165, 0.84, 0.44, 1)`)
+
+**Esempio:**  
+```html
+<a href="#" class="animate-line">Hover Me</a>
+<script src="animate-line.js"></script>
 ```
 
 © Sam Dsgn — Effects.js
