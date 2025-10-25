@@ -297,10 +297,14 @@ window.addEventListener("load", () => {
         });
       },
       onLeave: (batch) => {
-        gsap.set(batch, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        if (!nodes.length) return;
+        gsap.set(nodes, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
       },
       onLeaveBack: (batch) => {
-        gsap.set(batch, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        if (!nodes.length) return;
+        gsap.set(nodes, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
       }
     });
 
