@@ -1,3 +1,17 @@
+// ======= INIZIO STILI CUSTOM =======
+(function(){
+  // evita di aggiungerlo due volte
+  if (document.querySelector('style[data-rientro-style]')) return;
+  const style = document.createElement('style');
+  style.setAttribute('data-rientro-style', 'true');
+  style.textContent = `
+.rientro {
+  text-indent: 3em;
+}
+  `;
+  document.head.appendChild(style);
+})();
+// ======= FINE STILI CUSTOM =======
 // ======= INIZIO LOADER LIBRERIE =======
 // Le librerie GSAP sono già caricate da Webflow, quindi non serve ricaricarle.
 window.__EFFECTS_LIBS_READY__ = Promise.resolve();
