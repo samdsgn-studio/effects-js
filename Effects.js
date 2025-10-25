@@ -198,12 +198,55 @@ window.addEventListener("load", () => {
     if (!window.gsap) { console.error("GSAP not loaded"); return; }
     if (window.ScrollTrigger) { gsap.registerPlugin(ScrollTrigger); } else { console.error("ScrollTrigger not loaded"); return; }
 
-    // Stato iniziale: maschera chiusa dal basso
-    gsap.set(".img-reveal", {
-      clipPath: "inset(100% 0% 0% 0%)",
-      willChange: "clip-path, opacity, transform",
-      autoAlpha: 0,
-      y: 60
+    // Stato iniziale per-element: se già in viewport al load, lascialo rivelato, altrimenti nascondi
+    const imgRevealEls = gsap.utils.toArray('.img-reveal');
+    imgRevealEls.forEach((el) => {
+      // will-change per prestazioni
+      gsap.set(el, { willChange: 'clip-path, opacity, transform' });
+      const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+      if (isLoad) {
+        // per gli elementi che partiranno al load, imposta stato nascosto per animazione pulita
+        gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
+        return;
+      }
+      // se è già (anche solo un po') in viewport al load, mostrala per evitare flicker
+      if (ScrollTrigger.isInViewport(el, 0.01)) {
+        gsap.set(el, { clipPath: 'inset(0% 0% 0% 0%)', autoAlpha: 1, y: 0 });
+        el.dataset.imgRevealPrimed = '1';
+      } else {
+        gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
+      }
+    });
+
+    // Debounced refresh per gestire layout shift (immagini, font, ecc.)
+    let __imgRevealRT__;
+    const imgRevealSafeRefresh = () => {
+      clearTimeout(__imgRevealRT__);
+      __imgRevealRT__ = setTimeout(() => ScrollTrigger.refresh(), 120);
+    };
+
+    // Osserva cambi dimensione degli elementi e delle immagini interne
+    try {
+      if ('ResizeObserver' in window) {
+        const ro = new ResizeObserver(() => imgRevealSafeRefresh());
+        imgRevealEls.forEach(el => {
+          ro.observe(el);
+          // osserva anche immagini figlie
+          el.querySelectorAll('img, video, picture, source').forEach(node => {
+            try { ro.observe(node); } catch(_){}
+          });
+        });
+      }
+    } catch(_) {}
+
+    // Rinfresca anche quando le immagini completano il caricamento
+    imgRevealEls.forEach(el => {
+      el.querySelectorAll('img').forEach(img => {
+        if (!img.complete) {
+          img.addEventListener('load', imgRevealSafeRefresh, { once: true });
+          img.addEventListener('error', imgRevealSafeRefresh, { once: true });
+        }
+      });
     });
 
     // Animazione immediata per gli elementi che richiedono avvio al load
@@ -237,11 +280,12 @@ window.addEventListener("load", () => {
 
     // Animazione batch
     ScrollTrigger.batch(".img-reveal", {
-      start: "top 85%",
+      start: "top 90%",
       onEnter: (batch) => {
         const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
         if (!nodes.length) return;
         nodes.forEach((el, i) => {
+          if (el.dataset.imgRevealPrimed === '1') return; // già visibile, evita nuova animazione
           const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
           const delay = parseFloat(delayAttr) || (i * 0.25);
           const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
@@ -263,7 +307,8 @@ window.addEventListener("load", () => {
             delay,
             repeat,
             repeatDelay,
-            yoyo
+            yoyo,
+            immediateRender: false
           });
         });
       },
@@ -271,6 +316,7 @@ window.addEventListener("load", () => {
         const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
         if (!nodes.length) return;
         nodes.forEach((el, i) => {
+          if (el.dataset.imgRevealPrimed === '1') return;
           const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
           const delay = parseFloat(delayAttr) || (i * 0.25);
           const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
@@ -292,19 +338,20 @@ window.addEventListener("load", () => {
             delay,
             repeat,
             repeatDelay,
-            yoyo
+            yoyo,
+            immediateRender: false
           });
         });
       },
       onLeave: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')) && el.hasAttribute('data-reset-on-leave'));
         if (!nodes.length) return;
-        gsap.set(nodes, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+        gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
       },
       onLeaveBack: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')) && el.hasAttribute('data-reset-on-leave'));
         if (!nodes.length) return;
-        gsap.set(nodes, { clipPath: "inset(100% 0% 0% 0%)", autoAlpha: 0, y: 60 });
+        gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
       }
     });
 
