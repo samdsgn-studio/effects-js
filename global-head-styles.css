@@ -1,0 +1,14 @@
+/* ===============================
+   GLOBAL HEAD STYLES
+   =============================== */
+
+/* ===== TIPOGRAFIA: RIENTRO ===== */
+.rientro,
+.first-line-indent {
+  text-indent: 3em;
+}
+
+/* ===== NOTE =====
+   Include lo stile di rientro tipografico (.rientro / .first-line-indent)
+   da utilizzare nei paragrafi o nei blocchi di testo.
+*/
