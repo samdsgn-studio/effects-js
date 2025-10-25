@@ -21,20 +21,31 @@ Includi `scramble.js` nel tuo progetto e chiama la funzione `scrambleText(elemen
 
 ## 2️⃣ Effetto Split + Counter  
 **Descrizione:**  
-Divide il testo in singole lettere animate e mostra un contatore incrementale sincronizzato.
+Usa la classe `.split` per animare il testo dividendolo in linee, lettere o parole, con supporto al contatore numerico.
 
-**Uso:**  
-Includi `split-counter.js` e chiama `splitCounter(element, count)`.
+**Classe:**  
+- `.split` → applica l’effetto di divisione e animazione del testo.  
 
-**Esempio:**  
-```html
-<div id="split-counter">Count: 0</div>
-<script src="split-counter.js"></script>
-<script>
-  const el = document.getElementById('split-counter');
-  splitCounter(el, 100);
-</script>
-```
+**Attributi principali:**  
+- `mask-padding` → aggiunge spazio sotto le linee per evitare il taglio di lettere come “g” o “p”.  
+  Esempio: mask-padding="0.18em"  
+- `data-repeat` → quante volte ripetere l’animazione (`3`, `infinite`, ecc.).  
+  Esempio: data-repeat="3"  
+- `data-repeat-delay` → pausa tra una ripetizione e la successiva.  
+  Esempio: data-repeat-delay="0.5"  
+- `data-yoyo` → fa muovere l’animazione avanti e indietro.  
+  Esempio: data-yoyo  
+- `data-load` → fa partire l’animazione al caricamento della pagina.  
+  Esempio: data-load  
+- `data-delay` → ritarda l’avvio dell’effetto (in secondi).  
+  Esempio: data-delay="0.8"  
+- `data-count` → imposta il valore finale del contatore.  
+  Esempio: data-count="150"  
+
+**In breve:**  
+- Usa `.split` su testi o numeri che vuoi animare.  
+- Aggiungi attributi per modificare comportamento, ripetizioni, ritardi o avvio.  
+- Se non aggiungi `data-repeat`, l’effetto parte ogni volta che entra nel viewport.
 
 ---
 

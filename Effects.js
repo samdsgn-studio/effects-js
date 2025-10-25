@@ -143,24 +143,53 @@ window.addEventListener("load", () => {
       const startDelayAttr = el.getAttribute("delay") ?? el.getAttribute("data-delay");
       const START_DELAY = Number.parseFloat(startDelayAttr);
       const splitStartAt = (Number.isFinite(START_DELAY) && START_DELAY >= 0) ? START_DELAY : 0;
-      if (window.SplitText) {
-        el._split = SplitText.create(el, { type: "lines", mask: "lines" });
-        const maskPad = el.getAttribute("mask-padding") ?? el.getAttribute("data-mask-padding");
-        const baseProps = { y: 80, autoAlpha: 0, willChange: "transform,opacity" };
-        if (maskPad != null && maskPad !== "") baseProps.paddingBottom = maskPad;
-        gsap.set(el._split.lines, baseProps);
-      }
-      const counters = counterNodes(el);
-      counters.forEach(prime);
-      const tl = gsap.timeline({ paused: true });
+
+      // Parse repeat/yoyo attributes
+      const repeatAttr = el.getAttribute("repeat") ?? el.getAttribute("data-repeat");
+      const repeatDelayAttr = el.getAttribute("repeat-delay") ?? el.getAttribute("data-repeat-delay");
+      const yoyoAttr = el.getAttribute("yoyo") ?? el.getAttribute("data-yoyo");
+
+      const parseRepeat = (val) => {
+        // If no attribute, return undefined so GSAP uses its default behavior (restarts via ScrollTrigger)
+        if (val == null) return undefined;
+        const s = String(val).trim().toLowerCase();
+        if (s === "infinite" || s === "inf" || s === "∞" || s === "-1") return -1; // GSAP infinite
+        const n = parseInt(s, 10);
+        // Direct mapping: total plays logic (1 = 1, 2 = 2, etc.)
+        return Number.isFinite(n) && n > 1 ? n - 1 : 0;
+      };
+      const parseNonNeg = (val) => {
+        const n = parseFloat(val);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      };
+      const yn = (val) => (val === "" || String(val).toLowerCase() === "true" || String(val) === "1");
+
+      const tl = gsap.timeline({
+        paused: true,
+        repeat: parseRepeat(repeatAttr),
+        repeatDelay: parseNonNeg(repeatDelayAttr),
+        yoyo: yn(yoyoAttr)
+      });
+
       if (el._split) {
         tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto" }, splitStartAt);
       }
+      const counters = counterNodes(el);
+      counters.forEach(prime);
       counters.forEach(node => {
         const tw = makeCounterTween(node);
         if (tw) tl.add(tw, splitStartAt);
       });
       el._tl = tl;
+
+      // If attribute `load` (or `data-load`) is present, play on page load and skip ScrollTrigger
+      const playOnLoad = el.hasAttribute("load") || el.hasAttribute("data-load");
+      if (playOnLoad) {
+        // Start from the beginning each time build() runs
+        tl.restart(true);
+        return; // do not attach ScrollTrigger
+      }
+
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
