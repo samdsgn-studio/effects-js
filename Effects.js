@@ -144,8 +144,8 @@ window.addEventListener("load", () => {
       const START_DELAY = Number.parseFloat(startDelayAttr);
       const splitStartAt = (Number.isFinite(START_DELAY) && START_DELAY >= 0) ? START_DELAY : 0;
       if (window.SplitText) {
-        el._split = SplitText.create(el, { type: "lines", mask: "lines" });
-        gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity" });
+        el._split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "split-line" });
+        gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: "0.18em" });
       }
       const counters = counterNodes(el);
       counters.forEach(prime);
