@@ -210,23 +210,31 @@ window.addEventListener("load", () => {
     ScrollTrigger.batch(".img-reveal", {
       start: "top 85%",
       onEnter: (batch) => {
-        gsap.to(batch, {
-          clipPath: "inset(0% 0% 0% 0%)",
-          autoAlpha: 1,
-          y: 0,
-          duration: 1.6,
-          ease: "power3.out",
-          stagger: 0.25
+        batch.forEach((el, i) => {
+          const delayAttr = el.getAttribute("data-delay") || el.getAttribute("delay");
+          const delay = parseFloat(delayAttr) || (i * 0.25);
+          gsap.to(el, {
+            clipPath: "inset(0% 0% 0% 0%)",
+            autoAlpha: 1,
+            y: 0,
+            duration: 1.6,
+            ease: "power4.out",
+            delay: delay
+          });
         });
       },
       onEnterBack: (batch) => {
-        gsap.to(batch, {
-          clipPath: "inset(0% 0% 0% 0%)",
-          autoAlpha: 1,
-          y: 0,
-          duration: 1.6,
-          ease: "power3.out",
-          stagger: 0.25
+        batch.forEach((el, i) => {
+          const delayAttr = el.getAttribute("data-delay") || el.getAttribute("delay");
+          const delay = parseFloat(delayAttr) || (i * 0.25);
+          gsap.to(el, {
+            clipPath: "inset(0% 0% 0% 0%)",
+            autoAlpha: 1,
+            y: 0,
+            duration: 1.6,
+            ease: "power4.out",
+            delay: delay
+          });
         });
       },
       onLeave: (batch) => {
