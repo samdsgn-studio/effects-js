@@ -206,34 +206,93 @@ window.addEventListener("load", () => {
       y: 60
     });
 
+    // Animazione immediata per gli elementi che richiedono avvio al load
+    const loadNodes = gsap.utils.toArray('.img-reveal').filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
+    loadNodes.forEach((el) => {
+      const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+      const delay = parseFloat(delayAttr) || 0;
+      const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
+      let repeat = 0;
+      if (repeatAttr) {
+        const v = String(repeatAttr).trim().toLowerCase();
+        repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
+      }
+      const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
+      const repeatDelay = parseFloat(repeatDelayAttr) || 0;
+      const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
+
+      gsap.to(el, {
+        clipPath: 'inset(0% 0% 0% 0%)',
+        autoAlpha: 1,
+        y: 0,
+        duration: 1.6,
+        ease: 'power4.out',
+        delay,
+        repeat,
+        repeatDelay,
+        yoyo
+      });
+      el.dataset.imgRevealDone = '1';
+    });
+
     // Animazione batch
     ScrollTrigger.batch(".img-reveal", {
       start: "top 85%",
       onEnter: (batch) => {
-        batch.forEach((el, i) => {
-          const delayAttr = el.getAttribute("data-delay") || el.getAttribute("delay");
+        const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        if (!nodes.length) return;
+        nodes.forEach((el, i) => {
+          const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
           const delay = parseFloat(delayAttr) || (i * 0.25);
+          const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
+          let repeat = 0;
+          if (repeatAttr) {
+            const v = String(repeatAttr).trim().toLowerCase();
+            repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
+          }
+          const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
+          const repeatDelay = parseFloat(repeatDelayAttr) || 0;
+          const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
+
           gsap.to(el, {
-            clipPath: "inset(0% 0% 0% 0%)",
+            clipPath: 'inset(0% 0% 0% 0%)',
             autoAlpha: 1,
             y: 0,
             duration: 1.6,
-            ease: "power4.out",
-            delay: delay
+            ease: 'power4.out',
+            delay,
+            repeat,
+            repeatDelay,
+            yoyo
           });
         });
       },
       onEnterBack: (batch) => {
-        batch.forEach((el, i) => {
-          const delayAttr = el.getAttribute("data-delay") || el.getAttribute("delay");
+        const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+        if (!nodes.length) return;
+        nodes.forEach((el, i) => {
+          const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
           const delay = parseFloat(delayAttr) || (i * 0.25);
+          const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
+          let repeat = 0;
+          if (repeatAttr) {
+            const v = String(repeatAttr).trim().toLowerCase();
+            repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
+          }
+          const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
+          const repeatDelay = parseFloat(repeatDelayAttr) || 0;
+          const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
+
           gsap.to(el, {
-            clipPath: "inset(0% 0% 0% 0%)",
+            clipPath: 'inset(0% 0% 0% 0%)',
             autoAlpha: 1,
             y: 0,
             duration: 1.6,
-            ease: "power4.out",
-            delay: delay
+            ease: 'power4.out',
+            delay,
+            repeat,
+            repeatDelay,
+            yoyo
           });
         });
       },
