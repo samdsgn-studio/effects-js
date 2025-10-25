@@ -281,6 +281,7 @@ window.addEventListener("load", () => {
     // Animazione batch
     ScrollTrigger.batch(".img-reveal", {
       start: "top 90%",
+      end: "bottom 0%",
       onEnter: (batch) => {
         const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
         if (!nodes.length) return;
@@ -344,12 +345,12 @@ window.addEventListener("load", () => {
         });
       },
       onLeave: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')) && el.hasAttribute('data-reset-on-leave'));
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
         if (!nodes.length) return;
         gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
       },
       onLeaveBack: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')) && el.hasAttribute('data-reset-on-leave'));
+        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
         if (!nodes.length) return;
         gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
       }
