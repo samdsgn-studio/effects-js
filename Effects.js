@@ -148,20 +148,13 @@ window.addEventListener("load", () => {
       const maskPad = (maskPadAttr && maskPadAttr.trim() !== "") ? maskPadAttr : "0.18em";
       if (window.SplitText) {
         el._split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "split-line" });
-        const alreadyVisible = ScrollTrigger.isInViewport(el, 0.1); // ~10% visibile
-        gsap.set(el._split.lines, {
-          y: alreadyVisible ? 0 : 80,
-          autoAlpha: alreadyVisible ? 1 : 0,
-          willChange: "transform,opacity",
-          paddingBottom: maskPad
-        });
-        if (alreadyVisible) el.dataset.splitPrimed = '1';
+        gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: maskPad });
       }
       const counters = counterNodes(el);
       counters.forEach(prime);
       const tl = gsap.timeline({ paused: true });
       if (el._split) {
-        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto", immediateRender: false }, splitStartAt);
+        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto" }, splitStartAt);
       }
       counters.forEach(node => {
         const tw = makeCounterTween(node);
