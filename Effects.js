@@ -148,13 +148,20 @@ window.addEventListener("load", () => {
       const maskPad = (maskPadAttr && maskPadAttr.trim() !== "") ? maskPadAttr : "0.18em";
       if (window.SplitText) {
         el._split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "split-line" });
-        gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: maskPad });
+        const alreadyVisible = ScrollTrigger.isInViewport(el, 0.1); // ~10% visibile
+        gsap.set(el._split.lines, {
+          y: alreadyVisible ? 0 : 80,
+          autoAlpha: alreadyVisible ? 1 : 0,
+          willChange: "transform,opacity",
+          paddingBottom: maskPad
+        });
+        if (alreadyVisible) el.dataset.splitPrimed = '1';
       }
       const counters = counterNodes(el);
       counters.forEach(prime);
       const tl = gsap.timeline({ paused: true });
       if (el._split) {
-        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto" }, splitStartAt);
+        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto", immediateRender: false }, splitStartAt);
       }
       counters.forEach(node => {
         const tw = makeCounterTween(node);
@@ -165,7 +172,7 @@ window.addEventListener("load", () => {
       el._st = ScrollTrigger.create({
         trigger: el,
         start: "top 90%",
-        end: "bottom 10%",
+        end: "bottom 0%",
         onToggle: self => {
           if (self.isActive && !active) { el._tl.restart(true); active = true; }
           if (!self.isActive && active) { el._tl.pause(0); active = false; }
