@@ -471,11 +471,11 @@ window.addEventListener("load", () => {
   function primeHidden(el){
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
-    if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -100 }); return; }
-    if (dir === 'right') { gsap.set(el, { ...base, xPercent:  100 }); return; }
-    if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  100 }); return; }
+    if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+    if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+    if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
     // top
-    gsap.set(el, { ...base, yPercent: -100 });
+    gsap.set(el, { ...base, yPercent: -20 });
   }
 
   function primeShown(el){
@@ -490,7 +490,7 @@ window.addEventListener("load", () => {
       autoAlpha: 1,
       xPercent: 0,
       yPercent: 0,
-      duration: 1.2,
+      duration: 1.7,
       ease: 'power4.out',
       delay,
       overwrite: 'auto',
