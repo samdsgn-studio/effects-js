@@ -366,77 +366,6 @@ window.addEventListener("load", () => {
 // ======= FINE EFFETTO MASK IMAGE =======
 
 
-// ======= INIZIO FADE IN =======
-(function(){
-  function initFadeIn(){
-    if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
-    const hasST = !!window.ScrollTrigger;
-    if (hasST &amp;&amp; gsap.registerPlugin) {
-      try { gsap.registerPlugin(ScrollTrigger); } catch(_) {}
-    }
-
-    const nodes = gsap.utils ? gsap.utils.toArray('.fade-in') : Array.from(document.querySelectorAll('.fade-in'));
-    nodes.forEach(el => {
-      if (el.dataset.fadeInInit === '1') return; // evita doppi init
-      el.dataset.fadeInInit = '1';
-
-      // Delay opzionale
-      const delayAttr = el.getAttribute('delay') ?? el.getAttribute('data-delay');
-      const delay = parseFloat(delayAttr) || 0;
-
-      // Direzione opzionale tramite attributi booleani:
-      // data-bottom | data-top | data-left | data-right (oppure senza "data-")
-      const from =
-        (el.hasAttribute('data-bottom') || el.hasAttribute('bottom')) ? { yPercent:  2 } :
-        (el.hasAttribute('data-top')    || el.hasAttribute('top'))    ? { yPercent: -2 } :
-        (el.hasAttribute('data-left')   || el.hasAttribute('left'))   ? { xPercent: -2 } :
-        (el.hasAttribute('data-right')  || el.hasAttribute('right'))  ? { xPercent:  2 } :
-        { yPercent: 2 }; // default: dal basso verso l'alto (2%)
-
-      // Hint prestazioni
-      gsap.set(el, { willChange: 'transform,opacity' });
-
-      const animate = () => {
-        gsap.fromTo(
-          el,
-          Object.assign({ autoAlpha: 0 }, from),
-          {
-            autoAlpha: 1,
-            xPercent: 0,
-            yPercent: 0,
-            duration: 1.2,
-            ease: 'power4.out',
-            delay,
-            overwrite: 'auto',
-            immediateRender: false
-          }
-        );
-      };
-
-      if (hasST) {
-        ScrollTrigger.create({
-          trigger: el,
-          start: 'top 85%',
-          once: true,
-          onEnter: animate
-        });
-      } else {
-        // Fallback: anima subito senza ScrollTrigger
-        animate();
-      }
-    });
-  }
-
-  // esponi per debug/manual re-run
-  window.initFadeIn = initFadeIn;
-
-  // esegui su più eventi per supporto Designer/Preview
-  document.addEventListener('DOMContentLoaded', initFadeIn);
-  window.addEventListener('load', initFadeIn);
-  document.addEventListener('webflow:load', initFadeIn);
-})();
-// ======= FINE FADE IN =======
-
 
 // ======= INIZIO FADE FROM TOP =======
 (function(){
@@ -527,3 +456,116 @@ window.addEventListener("load", () => {
   window.addEventListener('load', initAnimateLine);
 })();
 // ======= FINE ANIMATE LINE =======
+
+
+// ======= INIZIO FADE IN =======
+(function(){
+  function parseDistance(el) {
+    // 1) attributo esplicito
+    const raw = (el.getAttribute('data-distance') || el.getAttribute('distance') || '').trim();
+    if (raw) {
+      // se termina con unità note, usalo così com'è; se è solo numero, interpreta come percentuale
+      const hasUnit = /(%|px|rem|vh|vw)$/i.test(raw);
+      const v = parseFloat(raw);
+      if (!Number.isNaN(v)) return hasUnit ? raw : `${v}%`;
+      return raw; // fallback, nel dubbio usa stringa così com'è
+    }
+    // 2) default 2% come richiesto
+    return '2%';
+  }
+
+  function getDirection(el) {
+    // booleani: data-bottom/top/left/right (o senza data-)
+    if (el.hasAttribute('data-top')   || el.hasAttribute('top'))    return 'top';
+    if (el.hasAttribute('data-left')  || el.hasAttribute('left'))   return 'left';
+    if (el.hasAttribute('data-right') || el.hasAttribute('right'))  return 'right';
+    // default: bottom
+    return 'bottom';
+  }
+
+  function makeFromVars(el) {
+    const dir = getDirection(el);
+    const dist = parseDistance(el);
+    const isPercent = /%$/.test(dist);
+    const n = parseFloat(dist);
+
+    // Se %: usa xPercent/yPercent; se unità assolute: x/y
+    if (dir === 'left')  return isPercent ? { xPercent: -Math.abs(n), autoAlpha: 0 } : { x: `-${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
+    if (dir === 'right') return isPercent ? { xPercent:  Math.abs(n), autoAlpha: 0 } : { x:  `${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
+    if (dir === 'top')   return isPercent ? { yPercent: -Math.abs(n), autoAlpha: 0 } : { y: `-${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
+    // bottom (default)
+    return isPercent ? { yPercent:  Math.abs(n), autoAlpha: 0 } : { y:  `${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
+  }
+
+  function initFadeIn(){
+    if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
+    const hasST = !!window.ScrollTrigger;
+    if (hasST && gsap.registerPlugin) {
+      try { gsap.registerPlugin(ScrollTrigger); } catch(_) {}
+    }
+
+    const nodes = (gsap.utils ? gsap.utils.toArray('.fade-in') : Array.from(document.querySelectorAll('.fade-in')));
+    nodes.forEach(el => {
+      if (el.dataset.fadeInInit === '1') return;
+      el.dataset.fadeInInit = '1';
+
+      // Attributi opzionali
+      const delayAttr    = el.getAttribute('data-delay')    ?? el.getAttribute('delay');
+      const durAttr      = el.getAttribute('data-duration') ?? el.getAttribute('duration');
+      const easeAttr     = el.getAttribute('data-ease')     ?? el.getAttribute('ease');
+      const startAttr    = el.getAttribute('data-start')    ?? 'top 85%';
+      const onceAttr     = el.getAttribute('data-once'); // default true se mancante
+
+      const delay   = parseFloat(delayAttr) || 0;
+      const duration = Number.isFinite(parseFloat(durAttr)) ? parseFloat(durAttr) : 1.2;
+      const ease    = (easeAttr && easeAttr.trim()) || 'power4.out';
+      const once    = (onceAttr == null) ? true : (String(onceAttr).toLowerCase() !== 'false');
+
+      // Hint prestazioni
+      gsap.set(el, { willChange: 'transform,opacity' });
+
+      const fromVars = makeFromVars(el);
+
+      const animate = () => {
+        gsap.fromTo(
+          el,
+          fromVars,
+          {
+            autoAlpha: 1,
+            xPercent: (fromVars.xPercent != null) ? 0 : undefined,
+            yPercent: (fromVars.yPercent != null) ? 0 : undefined,
+            x:        (fromVars.x != null) ? 0 : undefined,
+            y:        (fromVars.y != null) ? 0 : undefined,
+            duration,
+            ease,
+            delay,
+            overwrite: 'auto',
+            immediateRender: false
+          }
+        );
+      };
+
+      if (hasST) {
+        ScrollTrigger.create({
+          trigger: el,
+          start: startAttr,
+          once,
+          onEnter: animate,
+          toggleActions: once ? 'play none none none' : 'play none none reverse'
+        });
+      } else {
+        // Fallback: anima subito senza ScrollTrigger
+        animate();
+      }
+    });
+  }
+
+  // esponi per debug/manual re-run
+  window.initFadeIn = initFadeIn;
+
+  // esegui su più eventi per supporto Designer/Preview
+  document.addEventListener('DOMContentLoaded', initFadeIn);
+  window.addEventListener('load', initFadeIn);
+  document.addEventListener('webflow:load', initFadeIn);
+})();
+// ======= FINE FADE IN =======
