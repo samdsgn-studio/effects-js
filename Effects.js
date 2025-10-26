@@ -488,13 +488,43 @@ window.addEventListener("load", () => {
     const dist = parseDistance(el);
     const isPercent = /%$/.test(dist);
     const n = parseFloat(dist);
-
-    // Se %: usa xPercent/yPercent; se unità assolute: x/y
-    if (dir === 'left')  return isPercent ? { xPercent: -Math.abs(n), autoAlpha: 0 } : { x: `-${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
-    if (dir === 'right') return isPercent ? { xPercent:  Math.abs(n), autoAlpha: 0 } : { x:  `${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
-    if (dir === 'top')   return isPercent ? { yPercent: -Math.abs(n), autoAlpha: 0 } : { y: `-${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
-    // bottom (default)
-    return isPercent ? { yPercent:  Math.abs(n), autoAlpha: 0 } : { y:  `${Math.abs(n)}${isPercent ? '%' : dist.replace(String(n), '') || 'px'}`, autoAlpha: 0 };
+    const rect = el.getBoundingClientRect();
+    const width = Math.max(rect.width,  el.offsetWidth  || 0);
+    const height= Math.max(rect.height, el.offsetHeight || 0);
+    const minPx = 24; // spostamento minimo visibile
+    
+    // Helper per costruire valore px o percentuale coerente
+    const asPx = (val) => `${Math.round(Math.abs(val))}px`;
+    
+    if (dir === 'left' || dir === 'right') {
+      if (isPercent) {
+        const px = Math.round(Math.abs(n) * width / 100);
+        if (px < minPx) {
+          // percentuale troppo piccola: usa px per visibilità
+          const sign = (dir === 'left') ? -1 : 1;
+          return { x: asPx(sign * Math.max(px, minPx)), autoAlpha: 0 };
+        }
+        // percentuale ok
+        return { xPercent: (dir === 'left' ? -Math.abs(n) : Math.abs(n)), autoAlpha: 0 };
+      } else {
+        // unità assolute già fornite
+        const sign = (dir === 'left') ? -1 : 1;
+        return { x: (String(dist).trim().startsWith('-') ? dist : asPx(sign * n)), autoAlpha: 0 };
+      }
+    } else {
+      // top / bottom (default)
+      if (isPercent) {
+        const px = Math.round(Math.abs(n) * height / 100);
+        if (px < minPx) {
+          const sign = (dir === 'top') ? -1 : 1;
+          return { y: asPx(sign * Math.max(px, minPx)), autoAlpha: 0 };
+        }
+        return { yPercent: (dir === 'top' ? -Math.abs(n) : Math.abs(n)), autoAlpha: 0 };
+      } else {
+        const sign = (dir === 'top') ? -1 : 1;
+        return { y: (String(dist).trim().startsWith('-') ? dist : asPx(sign * n)), autoAlpha: 0 };
+      }
+    }
   }
 
   function initFadeIn(){
@@ -526,6 +556,17 @@ window.addEventListener("load", () => {
 
       const fromVars = makeFromVars(el);
 
+      // Se c'è ScrollTrigger, nascondi/posiziona subito gli elementi non in viewport per evitare flash
+      if (hasST && typeof ScrollTrigger.isInViewport === 'function') {
+        const inView = ScrollTrigger.isInViewport(el, 0.001);
+        if (!inView) {
+          gsap.set(el, fromVars);
+        }
+      }
+      
+      // Debug opzionale: se presente data-debug, mostra marker e log
+      const debug = el.hasAttribute('data-debug') || el.hasAttribute('debug');
+
       const animate = () => {
         gsap.fromTo(
           el,
@@ -550,7 +591,8 @@ window.addEventListener("load", () => {
           trigger: el,
           start: startAttr,
           once,
-          onEnter: animate,
+          markers: debug,
+          onEnter: () => { debug && console.log('[fade-in] onEnter', el); animate(); },
           toggleActions: once ? 'play none none none' : 'play none none reverse'
         });
       } else {
