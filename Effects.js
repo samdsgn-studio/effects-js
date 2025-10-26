@@ -534,8 +534,8 @@ window.addEventListener("load", () => {
 
       // Animazione batch con stesso trigger pattern di img-reveal
       ScrollTrigger.batch(".fade-in", {
-        start: "top 95%",
-        end: "bottom top",
+        start: "top 90%",
+        end: "bottom 0%",
         onEnter: (batch) => {
           const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
           if (!nodes.length) return;
