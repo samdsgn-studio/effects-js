@@ -460,154 +460,114 @@ window.addEventListener("load", () => {
 
 // ======= INIZIO FADE IN =======
 (function(){
-  function parseDistance(el) {
-    // 1) attributo esplicito
-    const raw = (el.getAttribute('data-distance') || el.getAttribute('distance') || '').trim();
-    if (raw) {
-      // se termina con unità note, usalo così com'è; se è solo numero, interpreta come percentuale
-      const hasUnit = /(%|px|rem|vh|vw)$/i.test(raw);
-      const v = parseFloat(raw);
-      if (!Number.isNaN(v)) return hasUnit ? raw : `${v}%`;
-      return raw; // fallback, nel dubbio usa stringa così com'è
-    }
-    // 2) default 5% come richiesto
-    return '5%';
+  function getDir(el){
+    if (el.hasAttribute('data-bottom') || el.hasAttribute('bottom')) return 'bottom';
+    if (el.hasAttribute('data-left')   || el.hasAttribute('left'))   return 'left';
+    if (el.hasAttribute('data-right')  || el.hasAttribute('right'))  return 'right';
+    // default: come "fade-from-top"
+    return 'top';
   }
 
-  function getDirection(el) {
-    // booleani: data-bottom/top/left/right (o senza data-)
-    if (el.hasAttribute('data-top')   || el.hasAttribute('top'))    return 'top';
-    if (el.hasAttribute('data-left')  || el.hasAttribute('left'))   return 'left';
-    if (el.hasAttribute('data-right') || el.hasAttribute('right'))  return 'right';
-    // default: bottom
-    return 'bottom';
+  function primeHidden(el){
+    const dir = getDir(el);
+    const base = { autoAlpha: 0, willChange: 'transform,opacity' };
+    if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -100 }); return; }
+    if (dir === 'right') { gsap.set(el, { ...base, xPercent:  100 }); return; }
+    if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  100 }); return; }
+    // top
+    gsap.set(el, { ...base, yPercent: -100 });
   }
 
-  function makeFromVars(el) {
-    const dir = getDirection(el);
-    const dist = parseDistance(el);
-    const isPercent = /%$/.test(dist);
-    const n = parseFloat(dist);
-    const rect = el.getBoundingClientRect();
-    const width = Math.max(rect.width,  el.offsetWidth  || 0);
-    const height= Math.max(rect.height, el.offsetHeight || 0);
-    const minPx = 24; // spostamento minimo visibile
-    
-    // Helper per costruire valore px o percentuale coerente
-    const asPx = (val) => `${Math.round(Math.abs(val))}px`;
-    
-    if (dir === 'left' || dir === 'right') {
-      if (isPercent) {
-        const px = Math.round(Math.abs(n) * width / 100);
-        if (px < minPx) {
-          // percentuale troppo piccola: usa px per visibilità
-          const sign = (dir === 'left') ? -1 : 1;
-          return { x: asPx(sign * Math.max(px, minPx)), autoAlpha: 0 };
-        }
-        // percentuale ok
-        return { xPercent: (dir === 'left' ? -Math.abs(n) : Math.abs(n)), autoAlpha: 0 };
-      } else {
-        // unità assolute già fornite
-        const sign = (dir === 'left') ? -1 : 1;
-        return { x: (String(dist).trim().startsWith('-') ? dist : asPx(sign * n)), autoAlpha: 0 };
-      }
-    } else {
-      // top / bottom (default)
-      if (isPercent) {
-        const px = Math.round(Math.abs(n) * height / 100);
-        if (px < minPx) {
-          const sign = (dir === 'top') ? -1 : 1;
-          return { y: asPx(sign * Math.max(px, minPx)), autoAlpha: 0 };
-        }
-        return { yPercent: (dir === 'top' ? -Math.abs(n) : Math.abs(n)), autoAlpha: 0 };
-      } else {
-        const sign = (dir === 'top') ? -1 : 1;
-        return { y: (String(dist).trim().startsWith('-') ? dist : asPx(sign * n)), autoAlpha: 0 };
-      }
-    }
+  function primeShown(el){
+    gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
-  function initFadeIn(){
-    if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
-    const hasST = !!window.ScrollTrigger;
-    if (hasST && gsap.registerPlugin) {
-      try { gsap.registerPlugin(ScrollTrigger); } catch(_) {}
-    }
-
-    const nodes = (gsap.utils ? gsap.utils.toArray('.fade-in') : Array.from(document.querySelectorAll('.fade-in')));
-    nodes.forEach(el => {
-      if (el.dataset.fadeInInit === '1') return;
-      el.dataset.fadeInInit = '1';
-
-      // Attributi opzionali
-      const delayAttr    = el.getAttribute('data-delay')    ?? el.getAttribute('delay');
-      const durAttr      = el.getAttribute('data-duration') ?? el.getAttribute('duration');
-      const easeAttr     = el.getAttribute('data-ease')     ?? el.getAttribute('ease');
-      const startAttr    = el.getAttribute('data-start')    ?? 'top 15%';
-      const onceAttr     = el.getAttribute('data-once'); // default true se mancante
-
-      const delay   = parseFloat(delayAttr) || 0;
-      const duration = Number.isFinite(parseFloat(durAttr)) ? parseFloat(durAttr) : 1.6;
-      const ease    = (easeAttr && easeAttr.trim()) || 'power4.out';
-      const once    = (onceAttr == null) ? true : (String(onceAttr).toLowerCase() !== 'false');
-
-      // Hint prestazioni
-      gsap.set(el, { willChange: 'transform,opacity' });
-
-      const fromVars = makeFromVars(el);
-
-      // Se c'è ScrollTrigger, nascondi/posiziona subito gli elementi non in viewport per evitare flash
-      if (hasST && typeof ScrollTrigger.isInViewport === 'function') {
-        const inView = ScrollTrigger.isInViewport(el, 0.001);
-        if (!inView) {
-          gsap.set(el, fromVars);
-        }
-      }
-      
-      // Debug opzionale: se presente data-debug, mostra marker e log
-      const debug = el.hasAttribute('data-debug') || el.hasAttribute('debug');
-
-      const animate = () => {
-        gsap.fromTo(
-          el,
-          fromVars,
-          {
-            autoAlpha: 1,
-            xPercent: (fromVars.xPercent != null) ? 0 : undefined,
-            yPercent: (fromVars.yPercent != null) ? 0 : undefined,
-            x:        (fromVars.x != null) ? 0 : undefined,
-            y:        (fromVars.y != null) ? 0 : undefined,
-            duration,
-            ease,
-            delay,
-            overwrite: 'auto',
-            immediateRender: false
-          }
-        );
-      };
-
-      if (hasST) {
-        ScrollTrigger.create({
-          trigger: el,
-          start: startAttr,
-          once,
-          markers: debug,
-          onEnter: () => { debug && console.log('[fade-in] onEnter', el); animate(); },
-          toggleActions: once ? 'play none none none' : 'play none none reverse'
-        });
-      } else {
-        // Fallback: anima subito senza ScrollTrigger
-        animate();
-      }
+  function animateToVisible(el, extraDelay = 0){
+    const dir = getDir(el);
+    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+    gsap.to(el, {
+      autoAlpha: 1,
+      xPercent: 0,
+      yPercent: 0,
+      duration: 1.2,
+      ease: 'power4.out',
+      delay,
+      overwrite: 'auto',
+      immediateRender: false
     });
   }
 
-  // esponi per debug/manual re-run
-  window.initFadeIn = initFadeIn;
+  window.addEventListener("load", () => {
+    (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+      if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
+      if (!window.ScrollTrigger) { console.error("ScrollTrigger not loaded for fade-in"); return; }
+      gsap.registerPlugin(ScrollTrigger);
 
-  // esegui su più eventi per supporto Designer/Preview
-  document.addEventListener('DOMContentLoaded', initFadeIn);
-  window.addEventListener('load', initFadeIn);
-  document.addEventListener('webflow:load', initFadeIn);
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      // Stato iniziale per-element: se già in viewport al load, lascialo rivelato, altrimenti nascondi
+      const fadeEls = gsap.utils.toArray('.fade-in');
+      fadeEls.forEach((el) => {
+        // se ha attributo load, verrà animato subito dopo il priming: in ogni caso prime come nascosto
+        const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+        if (isLoad) {
+          primeHidden(el);
+          return;
+        }
+
+        if (ScrollTrigger.isInViewport(el, 0.01)) {
+          // già (anche solo un po') in viewport: mostrato per evitare flicker
+          primeShown(el);
+          el.dataset.fadeInPrimed = '1';
+        } else {
+          primeHidden(el);
+        }
+      });
+
+      // Animazione immediata per gli elementi che richiedono avvio al load
+      const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
+      loadNodes.forEach((el) => {
+        animateToVisible(el, 0);
+        el.dataset.fadeInDone = '1';
+      });
+
+      // Animazione batch con stesso trigger pattern di img-reveal
+      ScrollTrigger.batch(".fade-in", {
+        start: "top 85%",
+        end: "bottom 0%",
+        onEnter: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
+            const perItemDelay = i * 0.25;
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onEnterBack: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return;
+            const perItemDelay = i * 0.25;
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onLeave: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        },
+        onLeaveBack: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        }
+      });
+
+      ScrollTrigger.refresh();
+    });
+  });
 })();
 // ======= FINE FADE IN =======
