@@ -366,6 +366,77 @@ window.addEventListener("load", () => {
 // ======= FINE EFFETTO MASK IMAGE =======
 
 
+// ======= INIZIO FADE IN =======
+(function(){
+  function initFadeIn(){
+    if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
+    const hasST = !!window.ScrollTrigger;
+    if (hasST &amp;&amp; gsap.registerPlugin) {
+      try { gsap.registerPlugin(ScrollTrigger); } catch(_) {}
+    }
+
+    const nodes = gsap.utils ? gsap.utils.toArray('.fade-in') : Array.from(document.querySelectorAll('.fade-in'));
+    nodes.forEach(el => {
+      if (el.dataset.fadeInInit === '1') return; // evita doppi init
+      el.dataset.fadeInInit = '1';
+
+      // Delay opzionale
+      const delayAttr = el.getAttribute('delay') ?? el.getAttribute('data-delay');
+      const delay = parseFloat(delayAttr) || 0;
+
+      // Direzione opzionale tramite attributi booleani:
+      // data-bottom | data-top | data-left | data-right (oppure senza "data-")
+      const from =
+        (el.hasAttribute('data-bottom') || el.hasAttribute('bottom')) ? { yPercent:  2 } :
+        (el.hasAttribute('data-top')    || el.hasAttribute('top'))    ? { yPercent: -2 } :
+        (el.hasAttribute('data-left')   || el.hasAttribute('left'))   ? { xPercent: -2 } :
+        (el.hasAttribute('data-right')  || el.hasAttribute('right'))  ? { xPercent:  2 } :
+        { yPercent: 2 }; // default: dal basso verso l'alto (2%)
+
+      // Hint prestazioni
+      gsap.set(el, { willChange: 'transform,opacity' });
+
+      const animate = () => {
+        gsap.fromTo(
+          el,
+          Object.assign({ autoAlpha: 0 }, from),
+          {
+            autoAlpha: 1,
+            xPercent: 0,
+            yPercent: 0,
+            duration: 1.2,
+            ease: 'power4.out',
+            delay,
+            overwrite: 'auto',
+            immediateRender: false
+          }
+        );
+      };
+
+      if (hasST) {
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 85%',
+          once: true,
+          onEnter: animate
+        });
+      } else {
+        // Fallback: anima subito senza ScrollTrigger
+        animate();
+      }
+    });
+  }
+
+  // esponi per debug/manual re-run
+  window.initFadeIn = initFadeIn;
+
+  // esegui su più eventi per supporto Designer/Preview
+  document.addEventListener('DOMContentLoaded', initFadeIn);
+  window.addEventListener('load', initFadeIn);
+  document.addEventListener('webflow:load', initFadeIn);
+})();
+// ======= FINE FADE IN =======
+
 
 // ======= INIZIO FADE FROM TOP =======
 (function(){
