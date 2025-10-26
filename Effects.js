@@ -425,9 +425,19 @@ window.addEventListener("load", () => {
 
 /* Keep container layout flexible, but put the underline on the inner text span */
 .animate-line > .animate-line__text {
-  display: inline-block;
+  /* Force the inner span to size to text only */
+  display: inline;
   position: relative;
-  /* The text span should not inherit container padding so underline matches text width */
+  width: auto !important;
+  max-width: none !important;
+  white-space: nowrap;
+  padding: 0 !important;
+}
+/* Defensive: if any utility forces block/100% width, cancel it here */
+.animate-line > .animate-line__text[style],
+.animate-line > .animate-line__text[class] {
+  width: auto !important;
+  max-width: none !important;
 }
 
 .animate-line > .animate-line__text::after {
