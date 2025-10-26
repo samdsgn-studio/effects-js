@@ -144,11 +144,15 @@ window.addEventListener("load", () => {
       const START_DELAY = Number.parseFloat(startDelayAttr);
       const splitStartAt = (Number.isFinite(START_DELAY) && START_DELAY >= 0) ? START_DELAY : 0;
       // Leggi un'eventuale padding della maschera dalle attributi dell'elemento
-      const maskPadAttr = el.getAttribute("mask-padding") ?? el.getAttribute("data-mask-padding");
-      const maskPad = (maskPadAttr && maskPadAttr.trim() !== "") ? maskPadAttr : "0.18em";
+      const maskPadAttr = el.getAttribute("mask-padding");
+      const maskPad = (maskPadAttr && maskPadAttr.trim() !== "") ? maskPadAttr : null;
       if (window.SplitText) {
         el._split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "split-line" });
-        gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: maskPad });
+        if (maskPad) {
+          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: maskPad });
+        } else {
+          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity" });
+        }
       }
       const counters = counterNodes(el);
       counters.forEach(prime);
