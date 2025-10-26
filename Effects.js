@@ -403,6 +403,7 @@ window.addEventListener("load", () => {
 
 
 // ======= INIZIO ANIMATE LINE =======
+// ======= INIZIO ANIMATE LINE =======
 (function(){
   function initAnimateLine(){
     if (document.querySelector('style[data-animate-line]')) return; // evita doppio inserimento
@@ -417,44 +418,55 @@ window.addEventListener("load", () => {
 .animate-line {
   display: inline-block !important;
   position: relative;
-  overflow-x: hidden;
   color: inherit;
-  width: max-content;
   max-width: 100%;
-  padding: 0 !important;
   flex: 0 0 auto;
 }
 
-@supports not (width: max-content) {
-  .animate-line { display: inline !important; }
+/* Keep container layout flexible, but put the underline on the inner text span */
+.animate-line > .animate-line__text {
+  display: inline-block;
+  position: relative;
+  /* The text span should not inherit container padding so underline matches text width */
 }
 
-.animate-line::after {
+.animate-line > .animate-line__text::after {
   pointer-events: none;
   background-color: currentColor;
   content: "";
   height: 1.5px;
   position: absolute;
   left: auto;
-  top: auto;
   right: 0%;
   bottom: 0%;
   width: 0%;
   transition: width var(--animate-line-speed) var(--animate-line-ease);
 }
 
-.animate-line:hover::after {
+.animate-line:hover > .animate-line__text::after {
   width: 100%;
   right: auto;
   left: 0%;
 }
     `;
     document.head.appendChild(style);
+    // Ensure underline applies only to text, not container padding
+    document.querySelectorAll('.animate-line').forEach(node => {
+      if (!node.querySelector('.animate-line__text')) {
+        const span = document.createElement('span');
+        span.className = 'animate-line__text';
+        while (node.firstChild) {
+          span.appendChild(node.firstChild);
+        }
+        node.appendChild(span);
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', initAnimateLine);
   window.addEventListener('load', initAnimateLine);
 })();
+// ======= FINE ANIMATE LINE =======
 // ======= FINE ANIMATE LINE =======
 
 
@@ -534,8 +546,8 @@ window.addEventListener("load", () => {
 
       // Animazione batch con stesso trigger pattern di img-reveal
       ScrollTrigger.batch(".fade-in", {
-        start: "top 100%",
-        end: "bottom 0%",
+        start: "top 95%",
+        end: "bottom top",
         onEnter: (batch) => {
           const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
           if (!nodes.length) return;
