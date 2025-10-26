@@ -470,8 +470,8 @@ window.addEventListener("load", () => {
       if (!Number.isNaN(v)) return hasUnit ? raw : `${v}%`;
       return raw; // fallback, nel dubbio usa stringa così com'è
     }
-    // 2) default 2% come richiesto
-    return '2%';
+    // 2) default 5% come richiesto
+    return '5%';
   }
 
   function getDirection(el) {
@@ -513,11 +513,11 @@ window.addEventListener("load", () => {
       const delayAttr    = el.getAttribute('data-delay')    ?? el.getAttribute('delay');
       const durAttr      = el.getAttribute('data-duration') ?? el.getAttribute('duration');
       const easeAttr     = el.getAttribute('data-ease')     ?? el.getAttribute('ease');
-      const startAttr    = el.getAttribute('data-start')    ?? 'top 85%';
+      const startAttr    = el.getAttribute('data-start')    ?? 'top 15%';
       const onceAttr     = el.getAttribute('data-once'); // default true se mancante
 
       const delay   = parseFloat(delayAttr) || 0;
-      const duration = Number.isFinite(parseFloat(durAttr)) ? parseFloat(durAttr) : 1.2;
+      const duration = Number.isFinite(parseFloat(durAttr)) ? parseFloat(durAttr) : 1.6;
       const ease    = (easeAttr && easeAttr.trim()) || 'power4.out';
       const once    = (onceAttr == null) ? true : (String(onceAttr).toLowerCase() !== 'false');
 
