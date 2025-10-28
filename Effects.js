@@ -559,6 +559,35 @@ window.addEventListener("load", () => {
     });
   }
 
+  function getSyncedRowIndex(el){
+    // Attivo solo se l’elemento è dentro un container con data-sync-seq
+    const group = el.closest('[data-sync-seq]');
+    if (!group) return null;
+    // Leggi il valore di colonna dall'elemento o dal suo antenato più vicino
+    const ownCol = el.getAttribute('data-col') || el.getAttribute('data-column');
+    const parentWithCol = ownCol ? null : el.closest('[data-col], [data-column]');
+    const col = ownCol || (parentWithCol ? (parentWithCol.getAttribute('data-col') || parentWithCol.getAttribute('data-column')) : null);
+    if (!col) return null;
+    // Prendi tutti gli elementi della stessa colonna nel gruppo, escludendo quelli con load
+    const colNodes = Array.from(group.querySelectorAll('.fade-in'))
+      .filter(n => {
+        const nOwnCol = n.getAttribute('data-col') || n.getAttribute('data-column');
+        const nParentWithCol = nOwnCol ? null : n.closest('[data-col], [data-column]');
+        const nCol = nOwnCol || (nParentWithCol ? (nParentWithCol.getAttribute('data-col') || nParentWithCol.getAttribute('data-column')) : null);
+        return nCol === col && !(n.hasAttribute('data-load') || n.hasAttribute('load'));
+      });
+    const idx = colNodes.indexOf(el);
+    return (idx >= 0) ? idx : null;
+  }
+
+  function getGroupStagger(el){
+    const group = el.closest('[data-sync-seq]');
+    if (!group) return null;
+    const attr = group.getAttribute('data-stagger') || group.getAttribute('stagger');
+    const v = parseFloat(attr);
+    return Number.isFinite(v) ? v : 0.25; // default
+  }
+
   window.addEventListener("load", () => {
     (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
       if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
@@ -608,7 +637,13 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
-            const perItemDelay = i * 0.25;
+            const rowIndex = getSyncedRowIndex(el);
+            let perItemDelay;
+            if (rowIndex !== null) {
+              perItemDelay = rowIndex * getGroupStagger(el);
+            } else {
+              perItemDelay = i * 0.25; // fallback comportamento attuale
+            }
             animateToVisible(el, perItemDelay);
           });
         },
@@ -617,7 +652,13 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return;
-            const perItemDelay = i * 0.25;
+            const rowIndex = getSyncedRowIndex(el);
+            let perItemDelay;
+            if (rowIndex !== null) {
+              perItemDelay = rowIndex * getGroupStagger(el);
+            } else {
+              perItemDelay = i * 0.25; // fallback comportamento attuale
+            }
             animateToVisible(el, perItemDelay);
           });
         },
