@@ -424,19 +424,27 @@ window.addEventListener("load", () => {
 }
 
 /* Keep container layout flexible, but put the underline on the inner text span */
-.animate-line > .animate-line__text {
+.animate-line > .animate-line__text,
+.animate-line > .animate-line__text.animate-line__text {
   /* Force the inner span to size to text only */
-  display: inline;
+  display: inline !important;
   position: relative;
   width: auto !important;
+  min-width: 0 !important;
   max-width: none !important;
   white-space: nowrap;
   padding: 0 !important;
+  margin: 0 !important;
+  float: none !important;
+  align-self: auto !important;
+  flex: 0 0 auto !important;
 }
 /* Defensive: if any utility forces block/100% width, cancel it here */
 .animate-line > .animate-line__text[style],
 .animate-line > .animate-line__text[class] {
+  display: inline !important;
   width: auto !important;
+  min-width: 0 !important;
   max-width: none !important;
 }
 
@@ -471,6 +479,37 @@ window.addEventListener("load", () => {
         node.appendChild(span);
       }
     });
+    // Observe future DOM changes to wrap any newly added .animate-line elements
+    try {
+      const wrapNode = (node) => {
+        if (!(node instanceof Element)) return;
+        if (node.matches && node.matches('.animate-line')) {
+          if (!node.querySelector('.animate-line__text')) {
+            const span = document.createElement('span');
+            span.className = 'animate-line__text';
+            while (node.firstChild) span.appendChild(node.firstChild);
+            node.appendChild(span);
+          }
+        }
+        node.querySelectorAll && node.querySelectorAll('.animate-line').forEach(el => {
+          if (!el.querySelector('.animate-line__text')) {
+            const span = document.createElement('span');
+            span.className = 'animate-line__text';
+            while (el.firstChild) span.appendChild(el.firstChild);
+            el.appendChild(span);
+          }
+        });
+      };
+      const mo = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+          m.addedNodes && m.addedNodes.forEach(wrapNode);
+          if (m.type === 'attributes' && m.target && m.target.matches && m.target.matches('.animate-line')) {
+            wrapNode(m.target);
+          }
+        });
+      });
+      mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    } catch(_) {}
   }
 
   document.addEventListener('DOMContentLoaded', initAnimateLine);
@@ -563,7 +602,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
-            const perItemDelay = i * 0.25;
+            const perItemDelay = i * 0.6;
             animateToVisible(el, perItemDelay);
           });
         },
@@ -572,7 +611,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return;
-            const perItemDelay = i * 0.25;
+            const perItemDelay = i * 0.6;
             animateToVisible(el, perItemDelay);
           });
         },
