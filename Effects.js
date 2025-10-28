@@ -530,7 +530,13 @@ window.addEventListener("load", () => {
 
   function primeHidden(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
-    if (isOverlay) { gsap.set(el, { autoAlpha: 0 }); return; }
+    if (isOverlay) {
+      // Lower z-index for overlays from 999 to 5
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(el, { autoAlpha: 0 });
+      return;
+    }
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
@@ -542,7 +548,13 @@ window.addEventListener("load", () => {
 
   function primeShown(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
-    if (isOverlay) { gsap.set(el, { autoAlpha: 1 }); return; }
+    if (isOverlay) {
+      // Lower z-index for overlays from 999 to 5
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(el, { autoAlpha: 1 });
+      return;
+    }
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
@@ -664,7 +676,13 @@ window.addEventListener("load", () => {
 
   function primeHidden(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
-    if (isOverlay) { gsap.set(el, { autoAlpha: 0 }); return; }
+    if (isOverlay) {
+      // Lower z-index for overlays from 999 to 5
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(el, { autoAlpha: 0 });
+      return;
+    }
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
@@ -675,7 +693,13 @@ window.addEventListener("load", () => {
 
   function primeShown(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
-    if (isOverlay) { gsap.set(el, { autoAlpha: 1 }); return; }
+    if (isOverlay) {
+      // Lower z-index for overlays from 999 to 5
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(el, { autoAlpha: 1 });
+      return;
+    }
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
