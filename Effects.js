@@ -529,6 +529,8 @@ window.addEventListener("load", () => {
   }
 
   function primeHidden(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) { gsap.set(el, { autoAlpha: 0 }); return; }
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
@@ -539,10 +541,26 @@ window.addEventListener("load", () => {
   }
 
   function primeShown(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) { gsap.set(el, { autoAlpha: 1 }); return; }
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
   function animateToVisible(el, extraDelay = 0){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) {
+      const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+      const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+      gsap.to(el, {
+        autoAlpha: 1,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
     const dir = getDir(el);
     const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
     const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
@@ -645,6 +663,8 @@ window.addEventListener("load", () => {
   }
 
   function primeHidden(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) { gsap.set(el, { autoAlpha: 0 }); return; }
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
@@ -654,10 +674,26 @@ window.addEventListener("load", () => {
   }
 
   function primeShown(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) { gsap.set(el, { autoAlpha: 1 }); return; }
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
   function animateToVisible(el, extraDelay = 0){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]');
+    if (isOverlay) {
+      const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+      const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+      gsap.to(el, {
+        autoAlpha: 1,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
     const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
     const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
     gsap.to(el, {
