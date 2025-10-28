@@ -588,8 +588,14 @@ window.addEventListener("load", () => {
 
       // Animazione immediata per gli elementi che richiedono avvio al load
       const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
-      loadNodes.forEach((el) => {
-        animateToVisible(el, 0);
+      loadNodes.forEach((el, i) => {
+        // Stagger configurabile per gli elementi che partono al load.
+        // Se presente `data-stagger`/`stagger` sull'elemento, usa quello; altrimenti default 0.25s.
+        const staggerAttr = el.getAttribute('data-stagger') || el.getAttribute('stagger');
+        const stagger = Number.isFinite(parseFloat(staggerAttr)) ? parseFloat(staggerAttr) : 0.25;
+        // `animateToVisible` somma l'extraDelay al delay locale dell'elemento (data-delay/delay),
+        // quindi `i * stagger` mantiene eventuali ritardi individuali già impostati.
+        animateToVisible(el, i * stagger);
         el.dataset.fadeInDone = '1';
       });
 
@@ -602,7 +608,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
-            const perItemDelay = i * 0.6;
+            const perItemDelay = i * 0.25;
             animateToVisible(el, perItemDelay);
           });
         },
@@ -611,7 +617,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return;
-            const perItemDelay = i * 0.6;
+            const perItemDelay = i * 0.25;
             animateToVisible(el, perItemDelay);
           });
         },
