@@ -587,8 +587,11 @@ window.addEventListener("load", () => {
 
       // Animazione immediata per gli elementi che richiedono avvio al load
       const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
-      loadNodes.forEach((el) => {
-        animateToVisible(el, 0);
+      loadNodes.forEach((el, i) => {
+        // Stagger configurabile per gli elementi che partono al load
+        const staggerAttr = el.getAttribute('data-stagger') || el.getAttribute('stagger');
+        const stagger = Number.isFinite(parseFloat(staggerAttr)) ? parseFloat(staggerAttr) : 0.25; // default 0.25s
+        animateToVisible(el, i * stagger);
         el.dataset.fadeInDone = '1';
       });
 
@@ -718,8 +721,11 @@ window.addEventListener("load", () => {
 
       // Load immediato (senza sincronizzazione per righe)
       const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
-      loadNodes.forEach((el) => {
-        animateToVisible(el, 0);
+      loadNodes.forEach((el, i) => {
+        // Stagger configurabile per gli elementi che partono al load
+        const staggerAttr = el.getAttribute('data-stagger') || el.getAttribute('stagger');
+        const stagger = Number.isFinite(parseFloat(staggerAttr)) ? parseFloat(staggerAttr) : 0.25; // default 0.25s
+        animateToVisible(el, i * stagger);
         el.dataset.fadeInDone = '1';
       });
 
