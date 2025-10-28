@@ -516,7 +516,6 @@ window.addEventListener("load", () => {
   window.addEventListener('load', initAnimateLine);
 })();
 // ======= FINE ANIMATE LINE =======
-// ======= FINE ANIMATE LINE =======
 
 
 // ======= INIZIO FADE IN =======
@@ -559,35 +558,6 @@ window.addEventListener("load", () => {
     });
   }
 
-  function getSyncedRowIndex(el){
-    // Attivo solo se l’elemento è dentro un container con data-sync-seq
-    const group = el.closest('[data-sync-seq]');
-    if (!group) return null;
-    // Leggi il valore di colonna dall'elemento o dal suo antenato più vicino
-    const ownCol = el.getAttribute('data-col') || el.getAttribute('data-column');
-    const parentWithCol = ownCol ? null : el.closest('[data-col], [data-column]');
-    const col = ownCol || (parentWithCol ? (parentWithCol.getAttribute('data-col') || parentWithCol.getAttribute('data-column')) : null);
-    if (!col) return null;
-    // Prendi tutti gli elementi della stessa colonna nel gruppo, escludendo quelli con load
-    const colNodes = Array.from(group.querySelectorAll('.fade-in'))
-      .filter(n => {
-        const nOwnCol = n.getAttribute('data-col') || n.getAttribute('data-column');
-        const nParentWithCol = nOwnCol ? null : n.closest('[data-col], [data-column]');
-        const nCol = nOwnCol || (nParentWithCol ? (nParentWithCol.getAttribute('data-col') || nParentWithCol.getAttribute('data-column')) : null);
-        return nCol === col && !(n.hasAttribute('data-load') || n.hasAttribute('load'));
-      });
-    const idx = colNodes.indexOf(el);
-    return (idx >= 0) ? idx : null;
-  }
-
-  function getGroupStagger(el){
-    const group = el.closest('[data-sync-seq]');
-    if (!group) return null;
-    const attr = group.getAttribute('data-stagger') || group.getAttribute('stagger');
-    const v = parseFloat(attr);
-    return Number.isFinite(v) ? v : 0.25; // default
-  }
-
   window.addEventListener("load", () => {
     (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
       if (!window.gsap) { console.error("GSAP not loaded for fade-in"); return; }
@@ -617,14 +587,8 @@ window.addEventListener("load", () => {
 
       // Animazione immediata per gli elementi che richiedono avvio al load
       const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
-      loadNodes.forEach((el, i) => {
-        // Stagger configurabile per gli elementi che partono al load.
-        // Se presente `data-stagger`/`stagger` sull'elemento, usa quello; altrimenti default 0.25s.
-        const staggerAttr = el.getAttribute('data-stagger') || el.getAttribute('stagger');
-        const stagger = Number.isFinite(parseFloat(staggerAttr)) ? parseFloat(staggerAttr) : 0.25;
-        // `animateToVisible` somma l'extraDelay al delay locale dell'elemento (data-delay/delay),
-        // quindi `i * stagger` mantiene eventuali ritardi individuali già impostati.
-        animateToVisible(el, i * stagger);
+      loadNodes.forEach((el) => {
+        animateToVisible(el, 0);
         el.dataset.fadeInDone = '1';
       });
 
@@ -637,13 +601,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
-            const rowIndex = getSyncedRowIndex(el);
-            let perItemDelay;
-            if (rowIndex !== null) {
-              perItemDelay = rowIndex * getGroupStagger(el);
-            } else {
-              perItemDelay = i * 0.25; // fallback comportamento attuale
-            }
+            const perItemDelay = i * 0.25;
             animateToVisible(el, perItemDelay);
           });
         },
@@ -652,13 +610,7 @@ window.addEventListener("load", () => {
           if (!nodes.length) return;
           nodes.forEach((el, i) => {
             if (el.dataset.fadeInPrimed === '1') return;
-            const rowIndex = getSyncedRowIndex(el);
-            let perItemDelay;
-            if (rowIndex !== null) {
-              perItemDelay = rowIndex * getGroupStagger(el);
-            } else {
-              perItemDelay = i * 0.25; // fallback comportamento attuale
-            }
+            const perItemDelay = i * 0.25;
             animateToVisible(el, perItemDelay);
           });
         },
@@ -679,3 +631,136 @@ window.addEventListener("load", () => {
   });
 })();
 // ======= FINE FADE IN =======
+
+// ======= INIZIO FADE IN (SYNC) =======
+(function(){
+  function getDir(el){
+    if (el.hasAttribute('data-bottom') || el.hasAttribute('bottom')) return 'bottom';
+    if (el.hasAttribute('data-left')   || el.hasAttribute('left'))   return 'left';
+    if (el.hasAttribute('data-right')  || el.hasAttribute('right'))  return 'right';
+    return 'top';
+  }
+
+  function primeHidden(el){
+    const dir = getDir(el);
+    const base = { autoAlpha: 0, willChange: 'transform,opacity' };
+    if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+    if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+    if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
+    gsap.set(el, { ...base, yPercent: -20 });
+  }
+
+  function primeShown(el){
+    gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
+  }
+
+  function animateToVisible(el, extraDelay = 0){
+    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+    gsap.to(el, {
+      autoAlpha: 1,
+      xPercent: 0,
+      yPercent: 0,
+      duration: 1.7,
+      ease: 'power4.out',
+      delay,
+      overwrite: 'auto',
+      immediateRender: false
+    });
+  }
+
+  // Helpers per la sincronizzazione a righe (A1+B1, A2+B2, ...)
+  function getSyncedRowIndex(el){
+    const group = el.closest('[data-sync-seq]');
+    if (!group) return null;
+    const ownCol = el.getAttribute('data-col') || el.getAttribute('data-column');
+    const parentWithCol = ownCol ? null : el.closest('[data-col], [data-column]');
+    const col = ownCol || (parentWithCol ? (parentWithCol.getAttribute('data-col') || parentWithCol.getAttribute('data-column')) : null);
+    if (!col) return null;
+    const colNodes = Array.from(group.querySelectorAll('.fade-in-sync'))
+      .filter(n => {
+        const nOwnCol = n.getAttribute('data-col') || n.getAttribute('data-column');
+        const nParentWithCol = nOwnCol ? null : n.closest('[data-col], [data-column]');
+        const nCol = nOwnCol || (nParentWithCol ? (nParentWithCol.getAttribute('data-col') || nParentWithCol.getAttribute('data-column')) : null);
+        return nCol === col && !(n.hasAttribute('data-load') || n.hasAttribute('load'));
+      });
+    const idx = colNodes.indexOf(el);
+    return (idx >= 0) ? idx : null;
+  }
+
+  function getGroupStagger(el){
+    const group = el.closest('[data-sync-seq]');
+    if (!group) return 0.25;
+    const attr = group.getAttribute('data-stagger') || group.getAttribute('stagger');
+    const v = parseFloat(attr);
+    return Number.isFinite(v) ? v : 0.25;
+  }
+
+  window.addEventListener("load", () => {
+    (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+      if (!window.gsap) { console.error("GSAP not loaded for fade-in-sync"); return; }
+      if (!window.ScrollTrigger) { console.error("ScrollTrigger not loaded for fade-in-sync"); return; }
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      const fadeEls = gsap.utils.toArray('.fade-in-sync');
+      fadeEls.forEach((el) => {
+        const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+        if (isLoad) { primeHidden(el); return; }
+        if (ScrollTrigger.isInViewport(el, 0.01)) {
+          primeShown(el);
+          el.dataset.fadeInPrimed = '1';
+        } else {
+          primeHidden(el);
+        }
+      });
+
+      // Load immediato (senza sincronizzazione per righe)
+      const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
+      loadNodes.forEach((el) => {
+        animateToVisible(el, 0);
+        el.dataset.fadeInDone = '1';
+      });
+
+      // Batch con sincronizzazione per righe quando presente data-sync-seq
+      ScrollTrigger.batch(".fade-in-sync", {
+        start: "top 95%",
+        end: "bottom top",
+        onEnter: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return;
+            const rowIndex = getSyncedRowIndex(el);
+            const perItemDelay = (rowIndex !== null) ? rowIndex * getGroupStagger(el) : (i * 0.25);
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onEnterBack: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return;
+            const rowIndex = getSyncedRowIndex(el);
+            const perItemDelay = (rowIndex !== null) ? rowIndex * getGroupStagger(el) : (i * 0.25);
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onLeave: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        },
+        onLeaveBack: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        }
+      });
+
+      ScrollTrigger.refresh();
+    });
+  });
+})();
+// ======= FINE FADE IN (SYNC) =======
