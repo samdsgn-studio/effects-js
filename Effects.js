@@ -533,7 +533,7 @@ window.addEventListener("load", () => {
     if (isOverlay) {
       // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
-      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 0 });
       return;
     }
@@ -551,7 +551,7 @@ window.addEventListener("load", () => {
     if (isOverlay) {
       // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
-      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 1 });
       return;
     }
@@ -679,7 +679,7 @@ window.addEventListener("load", () => {
     if (isOverlay) {
       // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
-      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 0 });
       return;
     }
@@ -696,7 +696,7 @@ window.addEventListener("load", () => {
     if (isOverlay) {
       // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
-      gsap.set(overlayNode, { zIndex: 5, pointerEvents: 'none' });
+      gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 1 });
       return;
     }
