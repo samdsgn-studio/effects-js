@@ -168,7 +168,7 @@ window.addEventListener("load", () => {
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
-        start: "top 80%",
+        start: "top 90%",
         end: "bottom 0%",
         onToggle: self => {
           if (self.isActive && !active) { el._tl.restart(true); active = true; }
