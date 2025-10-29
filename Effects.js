@@ -580,6 +580,7 @@ window.addEventListener("load", () => {
       // If already in viewport, show fully and reset filter
       gsap.set(blendNode, { filter: 'none' });
       gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
+      gsap.set(blendNode, { mixBlendMode: 'difference' });
       return;
     }
 
@@ -616,7 +617,10 @@ window.addEventListener("load", () => {
         delay,
         overwrite: 'auto',
         immediateRender: false,
-        onComplete: () => { gsap.set(blendNode, { filter: 'none' }); }
+        onComplete: () => {
+          gsap.set(blendNode, { filter: 'none' });
+          gsap.set(blendNode, { mixBlendMode: 'difference' });
+        }
       });
       // proceed with movement on the element (no opacity fade needed, keep autoAlpha:1)
       const dir = getDir(el);
@@ -779,6 +783,7 @@ window.addEventListener("load", () => {
     if (isBlend) {
       gsap.set(blendNode, { filter: 'none' });
       gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
+      gsap.set(blendNode, { mixBlendMode: 'difference' });
       return;
     }
 
@@ -813,7 +818,10 @@ window.addEventListener("load", () => {
         delay,
         overwrite: 'auto',
         immediateRender: false,
-        onComplete: () => { gsap.set(blendNode, { filter: 'none' }); }
+        onComplete: () => {
+          gsap.set(blendNode, { filter: 'none' });
+          gsap.set(blendNode, { mixBlendMode: 'difference' });
+        }
       });
       gsap.to(el, {
         autoAlpha: 1,
