@@ -140,7 +140,11 @@ window.addEventListener("load", () => {
       el._tl && el._tl.kill();
       el._split && el._split.revert && el._split.revert();
       normalizeCounters(el);
-      const playOnce = el.hasAttribute('data-load');
+      // Modalità di funzionamento
+      const playAtPageLoad = el.hasAttribute('load');              // attributo vuoto: <div class="split" load>
+      const dataLoadAttr    = el.getAttribute('data-load');        // "1", "0" o null
+      const onceOnScroll    = dataLoadAttr === '1';                // entra una volta, poi resta
+      const normalMode      = !onceOnScroll && (dataLoadAttr === null || dataLoadAttr === '0');
       const startDelayAttr = el.getAttribute("delay") ?? el.getAttribute("data-delay");
       const START_DELAY = Number.parseFloat(startDelayAttr);
       const splitStartAt = (Number.isFinite(START_DELAY) && START_DELAY >= 0) ? START_DELAY : 0;
@@ -166,28 +170,53 @@ window.addEventListener("load", () => {
         if (tw) tl.add(tw, splitStartAt);
       });
       el._tl = tl;
+      // Se era già stato riprodotto in questa sessione, porta subito la timeline allo stato finale (evita flicker su rebuild)
+      const alreadyPlayed = (onceOnScroll && el.dataset.splitOncePlayed === '1') || (playAtPageLoad && el.dataset.splitLoadPlayed === '1');
+      if (alreadyPlayed) {
+        el._tl.progress(1);
+      }
+
+      // Caso: attributo "load" (vuoto) → avvia al caricamento pagina una sola volta
+      if (playAtPageLoad && el.dataset.splitLoadPlayed !== '1') {
+        const startDelayAttr = el.getAttribute("delay") ?? el.getAttribute("data-delay");
+        const START_DELAY = Number.parseFloat(startDelayAttr);
+        if (Number.isFinite(START_DELAY) && START_DELAY > 0) {
+          gsap.delayedCall(START_DELAY, () => {
+            el._tl.play(0);
+            el.dataset.splitLoadPlayed = '1';
+          });
+        } else {
+          el._tl.play(0);
+          el.dataset.splitLoadPlayed = '1';
+        }
+      }
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
         start: "top 98%",
         end: "bottom 0%",
         onToggle: self => {
-          // Se ha data-load: riproduci solo la prima volta che entra in viewport; poi non retriggerare né resettare
-          if (playOnce && el.dataset.splitOncePlayed === '1') return;
+          // Modalità load (attributo vuoto): lo ScrollTrigger resta inerte
+          if (playAtPageLoad) return;
 
-          if (self.isActive) {
-            if (!active) {
+          // Modalità onceOnScroll: riproduci solo al primo ingresso, poi non resettare più
+          if (onceOnScroll) {
+            if (el.dataset.splitOncePlayed === '1') {
+              // già riprodotto: non fare nulla su enter/leave
+              return;
+            }
+            if (self.isActive && !active) {
               el._tl.restart(true);
               active = true;
-              if (playOnce) el.dataset.splitOncePlayed = '1';
+              el.dataset.splitOncePlayed = '1';
             }
-          } else {
-            if (active) {
-              // Se playOnce, non resettare mai l'animazione; lasciala allo stato corrente/finale
-              if (!playOnce) el._tl.pause(0);
-              active = false;
-            }
+            // non fare nulla su uscita, lascia visibile
+            return;
           }
+
+          // Modalità normale
+          if (self.isActive && !active) { el._tl.restart(true); active = true; }
+          if (!self.isActive && active) { el._tl.pause(0); active = false; }
         }
       });
     };
