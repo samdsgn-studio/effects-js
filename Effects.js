@@ -140,36 +140,55 @@ window.addEventListener("load", () => {
       el._tl && el._tl.kill();
       el._split && el._split.revert && el._split.revert();
       normalizeCounters(el);
-      const startDelayAttr = el.getAttribute("delay") ?? el.getAttribute("data-delay");
+
+      const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+
+      const startDelayAttr = el.getAttribute('delay') ?? el.getAttribute('data-delay');
       const START_DELAY = Number.parseFloat(startDelayAttr);
       const splitStartAt = (Number.isFinite(START_DELAY) && START_DELAY >= 0) ? START_DELAY : 0;
+
       // Leggi un'eventuale padding della maschera dalle attributi dell'elemento
-      const maskPadAttr = el.getAttribute("mask-padding");
-      const maskPad = (maskPadAttr && maskPadAttr.trim() !== "") ? maskPadAttr : null;
+      const maskPadAttr = el.getAttribute('mask-padding');
+      const maskPad = (maskPadAttr && maskPadAttr.trim() !== '') ? maskPadAttr : null;
+
       if (window.SplitText) {
-        el._split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "split-line" });
+        el._split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' });
         if (maskPad) {
-          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity", paddingBottom: maskPad });
+          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity', paddingBottom: maskPad });
         } else {
-          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: "transform,opacity" });
+          gsap.set(el._split.lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity' });
         }
       }
+
       const counters = counterNodes(el);
       counters.forEach(prime);
+
       const tl = gsap.timeline({ paused: true });
       if (el._split) {
-        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: "power4.out", overwrite: "auto" }, splitStartAt);
+        tl.to(el._split.lines, { y: 0, autoAlpha: 1, duration: 1.2, stagger: 0.08, ease: 'power4.out', overwrite: 'auto' }, splitStartAt);
       }
       counters.forEach(node => {
         const tw = makeCounterTween(node);
         if (tw) tl.add(tw, splitStartAt);
       });
       el._tl = tl;
+
+      // Se l'elemento ha data-load/load, esegui l'animazione al caricamento (rispettando eventuale delay) e non creare ScrollTrigger
+      if (isLoad) {
+        if (Number.isFinite(START_DELAY) && START_DELAY > 0) {
+          gsap.delayedCall(START_DELAY, () => el._tl.play(0));
+        } else {
+          el._tl.play(0);
+        }
+        return;
+      }
+
+      // Altrimenti, comportamento standard: parte quando entra in viewport
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
-        start: "top 98%",
-        end: "bottom 0%",
+        start: 'top 98%',
+        end: 'bottom 0%',
         onToggle: self => {
           if (self.isActive && !active) { el._tl.restart(true); active = true; }
           if (!self.isActive && active) { el._tl.pause(0); active = false; }
