@@ -177,8 +177,18 @@ window.addEventListener("load", () => {
       });
     };
 
-    const els = gsap.utils.toArray(".split");
-    els.forEach(build);
+    const els = gsap.utils.toArray('.split');
+
+    // Apply optional group stagger if wrapper has data-split-stagger
+    els.forEach((el, i) => {
+      const parentGroup = el.closest('[data-split-stagger]');
+      if (parentGroup) {
+        const baseDelay = parseFloat(el.getAttribute('data-delay') || '0') || 0;
+        const groupStagger = parseFloat(parentGroup.getAttribute('data-split-stagger')) || 0;
+        el.setAttribute('data-delay', (baseDelay + i * groupStagger).toFixed(2));
+      }
+      build(el);
+    });
     let t, lastW = window.innerWidth;
     const rebuildAll = () => { els.forEach(build); ScrollTrigger.refresh(); };
     const onResize = () => {
