@@ -294,7 +294,7 @@ window.addEventListener("load", () => {
 
     // Animazione batch
     ScrollTrigger.batch(".img-reveal", {
-      start: "top 85%",
+      start: "top 50%",
       end: "bottom 0%",
       onEnter: (batch) => {
         const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
