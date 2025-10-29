@@ -578,7 +578,7 @@ window.addEventListener("load", () => {
 
     if (isBlend) {
       // If already in viewport, show fully and reset filter
-      gsap.set(blendNode, { filter: 'brightness(1)' });
+      gsap.set(blendNode, { filter: 'none' });
       gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
       return;
     }
@@ -615,7 +615,8 @@ window.addEventListener("load", () => {
         ease: 'power4.out',
         delay,
         overwrite: 'auto',
-        immediateRender: false
+        immediateRender: false,
+        onComplete: () => { gsap.set(blendNode, { filter: 'none' }); }
       });
       // proceed with movement on the element (no opacity fade needed, keep autoAlpha:1)
       const dir = getDir(el);
@@ -776,7 +777,7 @@ window.addEventListener("load", () => {
     }
 
     if (isBlend) {
-      gsap.set(blendNode, { filter: 'brightness(1)' });
+      gsap.set(blendNode, { filter: 'none' });
       gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
       return;
     }
@@ -811,7 +812,8 @@ window.addEventListener("load", () => {
         ease: 'power4.out',
         delay,
         overwrite: 'auto',
-        immediateRender: false
+        immediateRender: false,
+        onComplete: () => { gsap.set(blendNode, { filter: 'none' }); }
       });
       gsap.to(el, {
         autoAlpha: 1,
