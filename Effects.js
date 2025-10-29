@@ -168,7 +168,7 @@ window.addEventListener("load", () => {
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
-        start: "top 90%",
+        start: "top 80%",
         end: "bottom 0%",
         onToggle: self => {
           if (self.isActive && !active) { el._tl.restart(true); active = true; }
@@ -530,39 +530,72 @@ window.addEventListener("load", () => {
 
   function primeHidden(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
     if (isOverlay) {
-      // Lower z-index for overlays from 999 to 5
+      // Overlay: no transform, only opacity; ensure on top immediately
       const overlayNode = el;
       gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 0 });
       return;
     }
+
+    // For blend: keep the element visible and prepare the blend child to fade via filter
+    if (isBlend) {
+      // prime the blend child filter; keep wrapper visible to preserve blending
+      gsap.set(blendNode, { filter: 'brightness(0)' });
+      // Also prime movement like normal so the wrapper can animate position
+      const dir = getDir(el);
+      const base = { autoAlpha: 1, willChange: 'transform,opacity,filter' };
+      if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+      if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+      if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
+      gsap.set(el, { ...base, yPercent: -20 });
+      return;
+    }
+
+    // Default prime (no overlay/blend)
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
     if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
     if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
-    // top
     gsap.set(el, { ...base, yPercent: -20 });
   }
 
   function primeShown(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
     if (isOverlay) {
-      // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
       gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 1 });
       return;
     }
+
+    if (isBlend) {
+      // If already in viewport, show fully and reset filter
+      gsap.set(blendNode, { filter: 'brightness(1)' });
+      gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
+      return;
+    }
+
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
   function animateToVisible(el, extraDelay = 0){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
+    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+
     if (isOverlay) {
-      const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-      const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+      // Overlay: fade only opacity on the element itself, no transform
       gsap.to(el, {
         autoAlpha: 1,
         duration: 1.7,
@@ -573,9 +606,34 @@ window.addEventListener("load", () => {
       });
       return;
     }
+
+    if (isBlend) {
+      // Blend: animate the blend child via filter while running normal movement on the wrapper
+      gsap.fromTo(blendNode, { filter: 'brightness(0)' }, {
+        filter: 'brightness(1)',
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      // proceed with movement on the element (no opacity fade needed, keep autoAlpha:1)
+      const dir = getDir(el);
+      gsap.to(el, {
+        autoAlpha: 1,
+        xPercent: 0,
+        yPercent: 0,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
+
+    // Default behavior
     const dir = getDir(el);
-    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
     gsap.to(el, {
       autoAlpha: 1,
       xPercent: 0,
@@ -676,13 +734,27 @@ window.addEventListener("load", () => {
 
   function primeHidden(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
     if (isOverlay) {
-      // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
       gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 0 });
       return;
     }
+
+    if (isBlend) {
+      gsap.set(blendNode, { filter: 'brightness(0)' });
+      const dir = getDir(el);
+      const base = { autoAlpha: 1, willChange: 'transform,opacity,filter' };
+      if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+      if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+      if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
+      gsap.set(el, { ...base, yPercent: -20 });
+      return;
+    }
+
     const dir = getDir(el);
     const base = { autoAlpha: 0, willChange: 'transform,opacity' };
     if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
@@ -693,21 +765,34 @@ window.addEventListener("load", () => {
 
   function primeShown(el){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
     if (isOverlay) {
-      // Lower z-index for overlays from 999 to 5
       const overlayNode = el;
       gsap.set(overlayNode, { zIndex: 5 });
       gsap.set(el, { autoAlpha: 1 });
       return;
     }
+
+    if (isBlend) {
+      gsap.set(blendNode, { filter: 'brightness(1)' });
+      gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
+      return;
+    }
+
     gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
   }
 
   function animateToVisible(el, extraDelay = 0){
     const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
+    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+
     if (isOverlay) {
-      const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-      const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
       gsap.to(el, {
         autoAlpha: 1,
         duration: 1.7,
@@ -718,8 +803,29 @@ window.addEventListener("load", () => {
       });
       return;
     }
-    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+
+    if (isBlend) {
+      gsap.fromTo(blendNode, { filter: 'brightness(0)' }, {
+        filter: 'brightness(1)',
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      gsap.to(el, {
+        autoAlpha: 1,
+        xPercent: 0,
+        yPercent: 0,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
+
     gsap.to(el, {
       autoAlpha: 1,
       xPercent: 0,
