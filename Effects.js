@@ -212,7 +212,7 @@ window.addEventListener("load", () => {
     if (!window.gsap) { console.error("GSAP not loaded"); return; }
     if (window.ScrollTrigger) { gsap.registerPlugin(ScrollTrigger); } else { console.error("ScrollTrigger not loaded"); return; }
 
-    // Stato iniziale per-element: se già in viewport al load, lascialo rivelato, altrimenti nascondi
+    // Stato iniziale per-element: tutti nascosti (eccetto quelli a load). L'apertura avverrà con almeno il 20% visibile
     const imgRevealEls = gsap.utils.toArray('.img-reveal');
     imgRevealEls.forEach((el) => {
       // will-change per prestazioni
@@ -223,13 +223,8 @@ window.addEventListener("load", () => {
         gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
         return;
       }
-      // se è già (anche solo un po') in viewport al load, mostrala per evitare flicker
-      if (ScrollTrigger.isInViewport(el, 0.01)) {
-        gsap.set(el, { clipPath: 'inset(0% 0% 0% 0%)', autoAlpha: 1, y: 0 });
-        el.dataset.imgRevealPrimed = '1';
-      } else {
-        gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
-      }
+      // default: nascosto; l'IntersectionObserver gestirà il reveal al 20%
+      gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
     });
 
     // Debounced refresh per gestire layout shift (immagini, font, ecc.)
@@ -263,6 +258,55 @@ window.addEventListener("load", () => {
       });
     });
 
+    // Rilevamento visibilità: reveal con >=20% visibile; hide solo quando completamente fuori viewport (0%)
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
+        const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+        if (isLoad) return; // gli elementi a load sono gestiti separatamente
+
+        const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+        const delay = parseFloat(delayAttr) || 0;
+        const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
+        let repeat = 0;
+        if (repeatAttr) {
+          const v = String(repeatAttr).trim().toLowerCase();
+          repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
+        }
+        const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
+        const repeatDelay = parseFloat(repeatDelayAttr) || 0;
+        const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
+
+        // Reveal quando almeno il 20% è visibile
+        if (entry.intersectionRatio >= 0.2) {
+          if (el.dataset.imgRevealShown === '1') return; // già visibile
+          gsap.to(el, {
+            clipPath: 'inset(0% 0% 0% 0%)',
+            autoAlpha: 1,
+            y: 0,
+            duration: 1.6,
+            ease: 'power4.out',
+            delay,
+            repeat,
+            repeatDelay,
+            yoyo,
+            immediateRender: false
+          });
+          el.dataset.imgRevealShown = '1';
+          return;
+        }
+
+        // Hide solo quando completamente fuori (0% visibile) da entrambe le direzioni
+        if (entry.intersectionRatio === 0) {
+          gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
+          el.dataset.imgRevealShown = '0';
+        }
+      });
+    }, { threshold: [0, 0.2, 1] });
+
+    // Attiva osservazione per tutti gli .img-reveal (anche quelli non in viewport al load)
+    imgRevealEls.forEach(el => io.observe(el));
+
     // Animazione immediata per gli elementi che richiedono avvio al load
     const loadNodes = gsap.utils.toArray('.img-reveal').filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
     loadNodes.forEach((el) => {
@@ -292,83 +336,6 @@ window.addEventListener("load", () => {
       el.dataset.imgRevealDone = '1';
     });
 
-    // Animazione batch
-    ScrollTrigger.batch(".img-reveal", {
-      start: "top 50%",
-      end: "bottom 0%",
-      onEnter: (batch) => {
-        const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
-        if (!nodes.length) return;
-        nodes.forEach((el, i) => {
-          if (el.dataset.imgRevealPrimed === '1') return; // già visibile, evita nuova animazione
-          const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-          const delay = parseFloat(delayAttr) || (i * 0.25);
-          const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
-          let repeat = 0;
-          if (repeatAttr) {
-            const v = String(repeatAttr).trim().toLowerCase();
-            repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
-          }
-          const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
-          const repeatDelay = parseFloat(repeatDelayAttr) || 0;
-          const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
-
-          gsap.to(el, {
-            clipPath: 'inset(0% 0% 0% 0%)',
-            autoAlpha: 1,
-            y: 0,
-            duration: 1.6,
-            ease: 'power4.out',
-            delay,
-            repeat,
-            repeatDelay,
-            yoyo,
-            immediateRender: false
-          });
-        });
-      },
-      onEnterBack: (batch) => {
-        const nodes = batch.filter(el => el.dataset.imgRevealDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
-        if (!nodes.length) return;
-        nodes.forEach((el, i) => {
-          if (el.dataset.imgRevealPrimed === '1') return;
-          const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
-          const delay = parseFloat(delayAttr) || (i * 0.25);
-          const repeatAttr = el.getAttribute('data-repeat') || el.getAttribute('repeat');
-          let repeat = 0;
-          if (repeatAttr) {
-            const v = String(repeatAttr).trim().toLowerCase();
-            repeat = (v === 'infinite') ? -1 : (Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : 0);
-          }
-          const repeatDelayAttr = el.getAttribute('data-repeat-delay') || el.getAttribute('repeat-delay');
-          const repeatDelay = parseFloat(repeatDelayAttr) || 0;
-          const yoyo = el.hasAttribute('data-yoyo') || el.hasAttribute('yoyo');
-
-          gsap.to(el, {
-            clipPath: 'inset(0% 0% 0% 0%)',
-            autoAlpha: 1,
-            y: 0,
-            duration: 1.6,
-            ease: 'power4.out',
-            delay,
-            repeat,
-            repeatDelay,
-            yoyo,
-            immediateRender: false
-          });
-        });
-      },
-      onLeave: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
-        if (!nodes.length) return;
-        gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
-      },
-      onLeaveBack: (batch) => {
-        const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
-        if (!nodes.length) return;
-        gsap.set(nodes, { clipPath: 'inset(100% 0% 0% 0%)', autoAlpha: 0, y: 60 });
-      }
-    });
 
     ScrollTrigger.refresh();
   });
