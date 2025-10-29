@@ -173,23 +173,25 @@ window.addEventListener("load", () => {
       });
       el._tl = tl;
 
-      // Se l'elemento ha data-load/load, esegui l'animazione al caricamento (rispettando eventuale delay) e non creare ScrollTrigger
+      // Se l'elemento ha data-load/load, esegui l'animazione al caricamento (rispettando eventuale delay)
       if (isLoad) {
         if (Number.isFinite(START_DELAY) && START_DELAY > 0) {
           gsap.delayedCall(START_DELAY, () => el._tl.play(0));
         } else {
           el._tl.play(0);
         }
-        return;
+        // marca che è stato avviato al load, per evitare retrigger su scroll
+        el.dataset.splitLoadPlayed = '1';
       }
 
-      // Altrimenti, comportamento standard: parte quando entra in viewport
+      // Crea sempre lo ScrollTrigger; se ha data-load, il trigger non fa nulla
       let active = false;
       el._st = ScrollTrigger.create({
         trigger: el,
         start: 'top 98%',
         end: 'bottom 0%',
         onToggle: self => {
+          if (isLoad) return; // con data-load, nessun comportamento su scroll
           if (self.isActive && !active) { el._tl.restart(true); active = true; }
           if (!self.isActive && active) { el._tl.pause(0); active = false; }
         }
