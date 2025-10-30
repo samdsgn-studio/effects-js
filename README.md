@@ -1,6 +1,6 @@
 # effects.js — Effects Reference
 
-Below are the 7 effects supported by `effects.js`, with concise usage notes. Keep classes and attributes exactly as listed. No HTML examples are included.
+Below are the 8 effects supported by `effects.js`, with concise usage notes. Keep classes and attributes exactly as listed. No HTML examples are included.
 
 ---
 
@@ -48,7 +48,28 @@ Splits text into lines (masked slide/fade) and runs number counters to their tar
 ---
 
 Name:
-## 3️⃣ Effect: Mask Image Reveal
+## 3️⃣ Effect: Split Hover
+
+**Description:**
+Splits text into lines and reveals them on hover. No scroll or load trigger — only mouse hover activates the animation. Uses GSAP SplitText if available.
+
+**Classes:**
+- `[data-split-hover]` → enables hover split animation
+- `[data-effect="split-hover"]` → alternate hook for same behavior
+
+**Attributes:**
+- `data-split-hover="once"` → animates only the first hover, stays visible afterward
+- `mask-padding` → optional bottom padding to avoid clipping during reveal (e.g. `8px`)
+
+**Notes:**
+- Requires GSAP + SplitText plugin
+- Supports lines split (default)
+- No scroll or load-based trigger; runs purely on hover
+
+---
+
+Name:
+## 4️⃣ Effect: Mask Image Reveal
 
 **Description:**
 Reveals elements vertically via `clip-path` with fade and slide; runs on scroll or immediately on load if specified.
@@ -66,7 +87,7 @@ Reveals elements vertically via `clip-path` with fade and slide; runs on scroll 
 ---
 
 Name:
-## 4️⃣ Effect: Fade From Top
+## 5️⃣ Effect: Fade From Top
 
 **Description:**
 One‑shot entrance: slides in from top with fade using `gsap.from`; runs on DOM ready/load/Webflow preview events (no scroll trigger).
@@ -80,7 +101,7 @@ One‑shot entrance: slides in from top with fade using `gsap.from`; runs on DOM
 ---
 
 Name:
-## 5️⃣ Effect: Animate Line (Underline on Hover)
+## 6️⃣ Effect: Animate Line (Underline on Hover)
 
 **Description:**
 Adds a hover underline that expands across the text; auto‑wraps content in an inner span to keep underline tight to text.
@@ -94,7 +115,7 @@ Adds a hover underline that expands across the text; auto‑wraps content in an 
 ---
 
 Name:
-## 6️⃣ Effect: Fade In
+## 7️⃣ Effect: Fade In
 
 **Description:**
 Scroll‑aware entrance with fade + directional slide. Supports overlay mode (opacity only) and blend mode (filter reveal), plus load‑time sequencing.
@@ -120,7 +141,7 @@ Scroll‑aware entrance with fade + directional slide. Supports overlay mode (op
 ---
 
 Name:
-## 7️⃣ Effect: Fade In (Sync)
+## 8️⃣ Effect: Fade In (Sync)
 
 **Description:**
 Like **Fade In**, but supports row‑synchronized sequencing across columns inside a grouped wrapper: items with the same row index animate together.
