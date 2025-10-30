@@ -257,26 +257,55 @@ window.addEventListener("load", () => {
     // --- Isola automaticamente le parentesi ⌜ ⌟ così restano statiche ---
     function isolateBrackets(elRoot){
       if (!elRoot || elRoot._bracketsIsolated) return;
-      // Se l'elemento contiene già figli element, evita di manipolare markup complesso
-      const hasElements = Array.from(elRoot.childNodes).some(n => n.nodeType === 1);
-      if (hasElements) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
-      const txt = elRoot.textContent || '';
-      if (!txt.includes('⌜') && !txt.includes('⌟')) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
-      // Sostituisci i caratteri con span .split-ignore
-      const safe = txt
-        .replace(/⌜/g, '<span class="split-ignore">⌜</span>')
-        .replace(/⌟/g, '<span class="split-ignore">⌟</span>');
-      elRoot.innerHTML = safe;
-      // Crea un contenitore per il testo animabile e sposta dentro tutto ciò che non è .split-ignore
+
+      // 1) Trasforma i TEXT NODE del livello corrente sostituendo ⌜ ⌟ con span .split-ignore
+      const wrapBracketsInTextNode = (textNode) => {
+        const value = textNode.nodeValue || '';
+        if (!value.includes('⌜') && !value.includes('⌟')) return;
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < value.length; i++) {
+          const ch = value[i];
+          if (ch === '⌜' || ch === '⌟') {
+            const s = document.createElement('span');
+            s.className = 'split-ignore';
+            s.textContent = ch;
+            frag.appendChild(s);
+          } else {
+            frag.appendChild(document.createTextNode(ch));
+          }
+        }
+        textNode.parentNode.replaceChild(frag, textNode);
+      };
+
+      // Esegui solo al livello corrente per evitare effetti collaterali profondi
+      Array.from(elRoot.childNodes).forEach(node => {
+        if (node.nodeType === 3) { // TEXT_NODE
+          wrapBracketsInTextNode(node);
+        }
+      });
+
+      // 2) Se dopo la trasformazione non ci sono .split-ignore, non isolare: target = elRoot
+      const hasBrackets = elRoot.querySelector('.split-ignore') !== null;
+      if (!hasBrackets) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
+
+      // 3) Crea un contenitore per la parte animabile e sposta dentro tutti i nodi che NON sono .split-ignore
       const mid = document.createElement('span');
       mid.className = 'split-target';
-      Array.from(elRoot.childNodes).slice().forEach(node => {
-        if (node.nodeType === 1 && node.classList.contains('split-ignore')) return;
-        mid.appendChild(node);
+      const toMove = [];
+      Array.from(elRoot.childNodes).forEach(n => {
+        if (n.nodeType === 1 && n.classList.contains('split-ignore')) return;
+        toMove.push(n);
       });
-      // Inserisci mid prima dell'ultima parentesi (se presente), altrimenti in coda
+      toMove.forEach(n => mid.appendChild(n));
+
+      // 4) Inserisci mid prima dell'ultima parentesi (se presente), altrimenti in coda
       const right = elRoot.querySelector('.split-ignore:last-of-type');
-      if (right) { elRoot.insertBefore(mid, right); } else { elRoot.appendChild(mid); }
+      if (right && right.parentNode === elRoot) {
+        elRoot.insertBefore(mid, right);
+      } else {
+        elRoot.appendChild(mid);
+      }
+
       elRoot._splitTarget = mid;
       elRoot._bracketsIsolated = true;
     }
