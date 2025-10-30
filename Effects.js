@@ -268,35 +268,34 @@ window.addEventListener("load", () => {
 
     function primeHiddenLines(lines){
       if (!lines) return;
-      const maskPadAttr = el.getAttribute('mask-padding');
-      if (maskPadAttr && maskPadAttr.trim() !== '') {
-        gsap.set(lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity', paddingBottom: maskPadAttr });
-      } else {
-        gsap.set(lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity' });
-      }
+      gsap.set(lines, { autoAlpha: 1, y: 0, willChange: 'transform' });
     }
 
     function revealLines(lines){
       if (!lines) return;
+      gsap.killTweensOf(lines);
       gsap.to(lines, {
-        y: 0,
-        autoAlpha: 1,
-        duration: 1.2,
-        ease: 'power4.out',
-        stagger: 0.08,
+        y: -40,
+        duration: 0.55,
+        ease: 'power3.out',
+        stagger: 0.06,
+        yoyo: true,
+        repeat: 1,
         overwrite: 'auto',
-        clearProps: 'transform,opacity,willChange'
+        onComplete: () => gsap.set(lines, { y: 0, autoAlpha: 1, clearProps: 'willChange' })
       });
     }
 
     function hideLines(lines){
       if (!lines) return;
+      gsap.killTweensOf(lines);
       gsap.to(lines, {
-        y: 80,
-        autoAlpha: 0,
-        duration: 0.6,
-        ease: 'power2.in',
-        overwrite: 'auto'
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.35,
+        ease: 'power2.out',
+        overwrite: 'auto',
+        clearProps: 'willChange'
       });
     }
 
