@@ -268,8 +268,9 @@ window.addEventListener("load", () => {
     const st = document.createElement('style');
     st.setAttribute('data-split-hover-style', 'true');
     st.textContent = `
-.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden;padding:0 4px;line-height:1.5;height:1em}
-.slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
+.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden;padding:0 4px;line-height:inherit;height:auto;vertical-align:baseline}
+.slide-in-bottom::after{content:"";display:block;height:var(--split-hover-mask,0.22em)}
+.slide-in-bottom__inner{position:relative;display:inline-block;line-height:inherit;transition:transform .3s;transform:translate3d(0,0,0)}
 .slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
 .slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
 .slide-in-bottom[data-copy]{cursor:pointer}
