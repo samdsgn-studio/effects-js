@@ -248,156 +248,69 @@ window.addEventListener("load", () => {
   });
 });
 
-// ======= INIZIO SPLIT HOVER (solo hover, niente scroll/load) =======
+// ======= INIZIO SPLIT HOVER (versione slide-in-bottom) =======
 (function(){
-  function buildSplitOnHover(el){
+  /**
+   * Questo sostituisce il vecchio effetto split-hover basato su SplitText
+   * con un effetto puramente CSS: al passaggio del mouse il testo sale e
+   * mostra il contenuto di data-hover dal basso.
+   *
+   * Markup generato automaticamente per ogni nodo con
+   *   [data-split-hover] o [data-effect="split-hover"]
+   *
+   * <span class="slide-in-bottom" tabindex="0">
+   *   <span class="slide-in-bottom__inner" data-hover="Testo hover">Testo base</span>
+   * </span>
+   */
+  function injectStyle(){
+    // usa lo stesso data-attr del vecchio effetto per evitare doppie iniezioni
+    if (document.querySelector('style[data-split-hover-style]')) return;
+    const st = document.createElement('style');
+    st.setAttribute('data-split-hover-style', 'true');
+    st.textContent = `
+.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden}
+.slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
+.slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
+.slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
+`;
+    document.head.appendChild(st);
+  }
+
+  function build(el){
     if (el._splitHoverInit === '1') return; // evita doppio init
     el._splitHoverInit = '1';
 
-    // --- Isola automaticamente le parentesi ⌜ ⌟ così restano statiche ---
-    function isolateBrackets(elRoot){
-      if (!elRoot || elRoot._bracketsIsolated) return;
+    // Testo base e testo hover
+    const baseText = el.textContent.trim();
+    const hoverText = el.getAttribute('data-hover') || el.getAttribute('data-alt') || el.getAttribute('aria-label') || baseText;
 
-      // 1) Trasforma i TEXT NODE del livello corrente sostituendo ⌜ ⌟ con span .split-ignore
-      const wrapBracketsInTextNode = (textNode) => {
-        const value = textNode.nodeValue || '';
-        if (!value.includes('⌜') && !value.includes('⌟')) return;
-        const frag = document.createDocumentFragment();
-        for (let i = 0; i < value.length; i++) {
-          const ch = value[i];
-          if (ch === '⌜' || ch === '⌟') {
-            const s = document.createElement('span');
-            s.className = 'split-ignore';
-            s.textContent = ch;
-            frag.appendChild(s);
-          } else {
-            frag.appendChild(document.createTextNode(ch));
-          }
-        }
-        textNode.parentNode.replaceChild(frag, textNode);
-      };
+    // Evita di ricreare se già strutturato
+    if (el.querySelector('.slide-in-bottom')) return;
 
-      // Esegui solo al livello corrente per evitare effetti collaterali profondi
-      Array.from(elRoot.childNodes).forEach(node => {
-        if (node.nodeType === 3) { // TEXT_NODE
-          wrapBracketsInTextNode(node);
-        }
-      });
+    // Crea struttura
+    const outer = document.createElement('span');
+    outer.className = 'slide-in-bottom';
+    outer.setAttribute('tabindex', '0');
 
-      // 2) Se dopo la trasformazione non ci sono .split-ignore, non isolare: target = elRoot
-      const hasBrackets = elRoot.querySelector('.split-ignore') !== null;
-      if (!hasBrackets) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
+    const inner = document.createElement('span');
+    inner.className = 'slide-in-bottom__inner';
+    inner.setAttribute('data-hover', hoverText);
 
-      // 3) Crea un contenitore per la parte animabile e sposta dentro tutti i nodi che NON sono .split-ignore
-      const mid = document.createElement('span');
-      mid.className = 'split-target';
-      const toMove = [];
-      Array.from(elRoot.childNodes).forEach(n => {
-        if (n.nodeType === 1 && n.classList.contains('split-ignore')) return;
-        toMove.push(n);
-      });
-      toMove.forEach(n => mid.appendChild(n));
+    // Sposta tutti i child esistenti dentro inner per preservare eventuale markup
+    while (el.firstChild) inner.appendChild(el.firstChild);
 
-      // 4) Inserisci mid prima dell'ultima parentesi (se presente), altrimenti in coda
-      const right = elRoot.querySelector('.split-ignore:last-of-type');
-      if (right && right.parentNode === elRoot) {
-        elRoot.insertBefore(mid, right);
-      } else {
-        elRoot.appendChild(mid);
-      }
-
-      elRoot._splitTarget = mid;
-      elRoot._bracketsIsolated = true;
-    }
-
-    // Prepara subito l'isolamento delle parentesi (se presenti)
-    isolateBrackets(el);
-
-    const hasOnce = el.getAttribute('data-split-hover') === 'once';
-
-    function ensureSplit(){
-      if (el._split && el._split.lines && el._split.lines.length) return el._split.lines;
-      if (!window.SplitText) return null;
-      try {
-        el._split && el._split.revert && el._split.revert();
-      } catch(_){}
-      const target = el._splitTarget || el;
-      el._split = SplitText.create(target, { type: 'lines', mask: 'lines', linesClass: 'split-line' });
-      return el._split.lines || null;
-    }
-
-    function primeHiddenLines(lines){
-      if (!lines) return;
-      gsap.set(lines, { autoAlpha: 1, y: 0, willChange: 'transform' });
-    }
-
-    function revealLines(lines){
-      if (!lines) return;
-      gsap.killTweensOf(lines);
-      gsap.set(lines, { willChange: 'transform' });
-      gsap.to(lines, {
-        keyframes: [
-          { y: -40, duration: 0.20, ease: 'power3.out' },
-          { y:  40, duration: 0.0 }, // salto immediato sotto
-          { y:   0, duration: 0.30, ease: 'power3.out' }
-        ],
-        stagger: 0.02,
-        overwrite: 'auto',
-        onComplete: () => gsap.set(lines, { clearProps: 'willChange' })
-      });
-    }
-
-    function hideLines(lines){
-      if (!lines) return;
-      gsap.killTweensOf(lines);
-      gsap.to(lines, {
-        y: 0,
-        autoAlpha: 1,
-        duration: 0.35,
-        ease: 'power2.out',
-        overwrite: 'auto',
-        clearProps: 'willChange'
-      });
-    }
-
-    el.addEventListener('mouseenter', () => {
-      if (!window.gsap) { console.error('GSAP not loaded for split-hover'); return; }
-      if (!window.SplitText) { console.error('SplitText not loaded for split-hover'); return; }
-      const lines = ensureSplit();
-      primeHiddenLines(lines);
-      revealLines(lines);
-    });
-
+    outer.appendChild(inner);
+    el.appendChild(outer);
   }
 
-  function initSplitHover(){
-    (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function(){
-      if (!window.gsap) { console.error('GSAP not loaded for split-hover'); return; }
-      // SplitText è opzionale ma richiesto per questo effetto
-      if (!window.SplitText) { console.error('SplitText not loaded for split-hover'); return; }
-      if (gsap.registerPlugin && window.SplitText) { try { gsap.registerPlugin(SplitText); } catch(_){} }
-
-      // Inject minimal CSS to keep split lines inline with surrounding text (prevent brackets from jumping lines)
-      if (!document.querySelector('style[data-split-hover-style]')) {
-        const st = document.createElement('style');
-        st.setAttribute('data-split-hover-style', 'true');
-        st.textContent = `
-.split-ignore{display:inline-block;vertical-align:baseline;pointer-events:none}
-.split-target{display:inline-block;vertical-align:baseline}
-.split-line{display:inline-block;vertical-align:baseline}
-`;
-        document.head.appendChild(st);
-      }
-
-      const nodes = document.querySelectorAll('[data-split-hover], [data-effect="split-hover"]');
-      nodes.forEach(buildSplitOnHover);
-    });
+  function init(){
+    injectStyle();
+    const nodes = document.querySelectorAll('[data-split-hover], [data-effect="split-hover"]');
+    nodes.forEach(build);
   }
 
-  // Inizializza appena il DOM è disponibile (niente scroll/load trigger)
-  document.addEventListener('DOMContentLoaded', initSplitHover);
-  // In caso di Designer/Preview reload
-  document.addEventListener('webflow:load', initSplitHover);
+  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('webflow:load', init);
 })();
 // ======= FINE SPLIT HOVER =======
 
@@ -622,39 +535,32 @@ window.addEventListener("load", () => {
   --animate-line-ease: cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
+/* Container should not force single-line */
 .animate-line {
-  display: inline-block !important;
+  display: inline !important;
   position: relative;
   color: inherit;
   max-width: 100%;
   flex: 0 0 auto;
 }
 
-/* Keep container layout flexible, but put the underline on the inner text span */
+/* Inner text wrapper */
 .animate-line > .animate-line__text,
 .animate-line > .animate-line__text.animate-line__text {
-  /* Force the inner span to size to text only */
   display: inline !important;
   position: relative;
   width: auto !important;
   min-width: 0 !important;
   max-width: none !important;
-  white-space: nowrap;
+  white-space: normal; /* allow wrapping across multiple rows */
   padding: 0 !important;
   margin: 0 !important;
   float: none !important;
   align-self: auto !important;
   flex: 0 0 auto !important;
 }
-/* Defensive: if any utility forces block/100% width, cancel it here */
-.animate-line > .animate-line__text[style],
-.animate-line > .animate-line__text[class] {
-  display: inline !important;
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-}
 
+/* Fallback single-underline (kept for one-line titles) */
 .animate-line > .animate-line__text::after {
   pointer-events: none;
   background-color: currentColor;
@@ -668,12 +574,37 @@ window.addEventListener("load", () => {
   transition: width var(--animate-line-speed) var(--animate-line-ease);
 }
 
-.animate-line:hover > .animate-line__text::after {
+/* Disable fallback when we split into multiple lines */
+.animate-line.animate-line--split > .animate-line__text::after { display: none !important; }
+
+/* Per-line spans generated by SplitText */
+.aline-line { /* each visual line */
+  display: inline-block; /* size to the line width only */
+  position: relative;
+  vertical-align: baseline;
+  white-space: normal;
+}
+
+.aline-line::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: auto;
+  right: 0%;
+  bottom: 0;
+  height: 1.5px;
+  width: 0%;
+  background-color: currentColor;
+  transition: width var(--animate-line-speed) var(--animate-line-ease);
+}
+
+/* Hover expands underline on each line */
+.animate-line:hover .aline-line::after {
   width: 100%;
   right: auto;
   left: 0%;
 }
-    `;
+`;
     document.head.appendChild(style);
     // Ensure underline applies only to text, not container padding
     document.querySelectorAll('.animate-line').forEach(node => {
@@ -686,6 +617,24 @@ window.addEventListener("load", () => {
         node.appendChild(span);
       }
     });
+
+    // Split per visual lines so multi-row titles animate each line underline
+    const splitPerLine = (root) => {
+      const textSpan = root.querySelector('.animate-line__text');
+      if (!textSpan || root.dataset.alineSplit === '1') return;
+      if (!window.SplitText) return; // gracefully skip if plugin missing
+      try { if (gsap.registerPlugin) gsap.registerPlugin(SplitText); } catch(_){}
+      try {
+        const s = SplitText.create(textSpan, { type: 'lines', linesClass: 'aline-line' });
+        if (s && s.lines && s.lines.length > 1) {
+          root.classList.add('animate-line--split');
+        }
+        root.dataset.alineSplit = '1';
+      } catch(_){}
+    };
+
+    document.querySelectorAll('.animate-line').forEach(splitPerLine);
+
     // Observe future DOM changes to wrap any newly added .animate-line elements
     try {
       const wrapNode = (node) => {
@@ -697,6 +646,7 @@ window.addEventListener("load", () => {
             while (node.firstChild) span.appendChild(node.firstChild);
             node.appendChild(span);
           }
+          splitPerLine(node);
         }
         node.querySelectorAll && node.querySelectorAll('.animate-line').forEach(el => {
           if (!el.querySelector('.animate-line__text')) {
@@ -705,6 +655,7 @@ window.addEventListener("load", () => {
             while (el.firstChild) span.appendChild(el.firstChild);
             el.appendChild(span);
           }
+          splitPerLine(el);
         });
       };
       const mo = new MutationObserver((mutations) => {
