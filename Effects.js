@@ -368,11 +368,6 @@ window.addEventListener("load", () => {
       revealLines(lines);
     });
 
-    el.addEventListener('mouseleave', () => {
-      if (hasOnce) return; // se richiesto solo-una-volta, resta visibile
-      if (!window.gsap || !el._split) return;
-      hideLines(el._split.lines);
-    });
   }
 
   function initSplitHover(){
