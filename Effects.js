@@ -256,44 +256,6 @@ window.addEventListener("load", () => {
 
     const hasOnce = el.getAttribute('data-split-hover') === 'once';
 
-    // Prepara struttura "duplicata" per ogni linea: A (top) e B (bottom)
-    function prepareDualLines(lines){
-      if (!lines || el._dualPrepared) return;
-      lines.forEach(line => {
-        // misura altezza riga
-        const h = line.getBoundingClientRect().height || line.offsetHeight || 0;
-        const textHtml = line.innerHTML;
-        // reset contenuto e struttura
-        line.innerHTML = '';
-        line.style.position = 'relative';
-        line.style.overflow = 'hidden';
-        if (h) line.style.height = h + 'px';
-        // wrapper opzionale (non necessario, usiamo direttamente 2 span assoluti)
-        const a = document.createElement('span');
-        a.className = 'split-dual__a';
-        a.style.position = 'absolute';
-        a.style.left = '0';
-        a.style.right = '0';
-        a.style.top = '0';
-        a.style.display = 'inline-block';
-        a.innerHTML = textHtml;
-        const b = document.createElement('span');
-        b.className = 'split-dual__b';
-        b.style.position = 'absolute';
-        b.style.left = '0';
-        b.style.right = '0';
-        b.style.top = '0';
-        b.style.display = 'inline-block';
-        b.innerHTML = textHtml;
-        line.appendChild(a);
-        line.appendChild(b);
-        // stato di riposo: A a 0, B sotto
-        gsap.set(a, { y: 0 });
-        gsap.set(b, { y: 40 });
-      });
-      el._dualPrepared = true;
-    }
-
     function ensureSplit(){
       if (el._split && el._split.lines && el._split.lines.length) return el._split.lines;
       if (!window.SplitText) return null;
@@ -306,44 +268,36 @@ window.addEventListener("load", () => {
 
     function primeHiddenLines(lines){
       if (!lines) return;
-      prepareDualLines(lines);
-      // Assicurati che il testo sia visibile e pronto
-      gsap.set(lines, { autoAlpha: 1, willChange: 'transform' });
-      const aEls = lines.map(line => line.querySelector('.split-dual__a')).filter(Boolean);
-      const bEls = lines.map(line => line.querySelector('.split-dual__b')).filter(Boolean);
-      gsap.set(aEls, { y: 0 });
-      gsap.set(bEls, { y: 40 });
+      gsap.set(lines, { autoAlpha: 1, y: 0, willChange: 'transform' });
     }
 
     function revealLines(lines){
       if (!lines) return;
-      prepareDualLines(lines);
-      const aEls = lines.map(line => line.querySelector('.split-dual__a')).filter(Boolean);
-      const bEls = lines.map(line => line.querySelector('.split-dual__b')).filter(Boolean);
-      gsap.killTweensOf(aEls);
-      gsap.killTweensOf(bEls);
-      gsap.set([...aEls, ...bEls], { willChange: 'transform' });
-      // A sale su, B entra da sotto in parallelo
-      const durUp = 0.28, durIn = 0.42, st = 0.05;
-      gsap.to(aEls, { y: -40, duration: durUp, ease: 'power3.out', stagger: st, overwrite: 'auto' });
-      gsap.to(bEls, { y:   0, duration: durIn, ease: 'power3.out', stagger: st, overwrite: 'auto',
-        onComplete: () => gsap.set([...aEls, ...bEls], { clearProps: 'willChange' })
-      });
-      // ripristina lo stato di riposo per il prossimo hover (senza flash: A torna a 0, B torna a 40)
-      gsap.delayedCall(Math.max(durUp, durIn) + st * (Math.max(aEls.length, bEls.length) - 1), () => {
-        gsap.set(aEls, { y: 0 });
-        gsap.set(bEls, { y: 40 });
+      gsap.killTweensOf(lines);
+      gsap.set(lines, { willChange: 'transform' });
+      gsap.to(lines, {
+        keyframes: [
+          { y: -40, duration: 0.22, ease: 'power3.out' },
+          { y:  40, duration: 0.0 }, // salto immediato sotto
+          { y:   0, duration: 0.22, ease: 'power3.out' }
+        ],
+        stagger: 0.05,
+        overwrite: 'auto',
+        onComplete: () => gsap.set(lines, { clearProps: 'willChange' })
       });
     }
 
     function hideLines(lines){
       if (!lines) return;
-      const aEls = lines.map(line => line.querySelector('.split-dual__a')).filter(Boolean);
-      const bEls = lines.map(line => line.querySelector('.split-dual__b')).filter(Boolean);
-      gsap.killTweensOf(aEls);
-      gsap.killTweensOf(bEls);
-      gsap.to(aEls, { y: 0, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
-      gsap.to(bEls, { y: 40, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
+      gsap.killTweensOf(lines);
+      gsap.to(lines, {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.25,
+        ease: 'power2.out',
+        overwrite: 'auto',
+        clearProps: 'willChange'
+      });
     }
 
     el.addEventListener('mouseenter', () => {
