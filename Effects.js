@@ -282,8 +282,7 @@ window.addEventListener("load", () => {
         ease: 'power3.out',
         stagger: 0.06
       })
-      // 2) Dopo 0.2s rientra da sotto (y: 40 -> 0)
-      .add('+=0.2')
+      // 2) Rientra subito da sotto (y: 40 -> 0) senza attesa
       .set(lines, { y: 40, autoAlpha: 1, willChange: 'transform' })
       .to(lines, {
         y: 0,
