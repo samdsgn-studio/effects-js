@@ -254,6 +254,36 @@ window.addEventListener("load", () => {
     if (el._splitHoverInit === '1') return; // evita doppio init
     el._splitHoverInit = '1';
 
+    // --- Isola automaticamente le parentesi ⌜ ⌟ così restano statiche ---
+    function isolateBrackets(elRoot){
+      if (!elRoot || elRoot._bracketsIsolated) return;
+      // Se l'elemento contiene già figli element, evita di manipolare markup complesso
+      const hasElements = Array.from(elRoot.childNodes).some(n => n.nodeType === 1);
+      if (hasElements) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
+      const txt = elRoot.textContent || '';
+      if (!txt.includes('⌜') && !txt.includes('⌟')) { elRoot._splitTarget = elRoot; elRoot._bracketsIsolated = true; return; }
+      // Sostituisci i caratteri con span .split-ignore
+      const safe = txt
+        .replace(/⌜/g, '<span class="split-ignore">⌜</span>')
+        .replace(/⌟/g, '<span class="split-ignore">⌟</span>');
+      elRoot.innerHTML = safe;
+      // Crea un contenitore per il testo animabile e sposta dentro tutto ciò che non è .split-ignore
+      const mid = document.createElement('span');
+      mid.className = 'split-target';
+      Array.from(elRoot.childNodes).slice().forEach(node => {
+        if (node.nodeType === 1 && node.classList.contains('split-ignore')) return;
+        mid.appendChild(node);
+      });
+      // Inserisci mid prima dell'ultima parentesi (se presente), altrimenti in coda
+      const right = elRoot.querySelector('.split-ignore:last-of-type');
+      if (right) { elRoot.insertBefore(mid, right); } else { elRoot.appendChild(mid); }
+      elRoot._splitTarget = mid;
+      elRoot._bracketsIsolated = true;
+    }
+
+    // Prepara subito l'isolamento delle parentesi (se presenti)
+    isolateBrackets(el);
+
     const hasOnce = el.getAttribute('data-split-hover') === 'once';
 
     function ensureSplit(){
@@ -262,7 +292,8 @@ window.addEventListener("load", () => {
       try {
         el._split && el._split.revert && el._split.revert();
       } catch(_){}
-      el._split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' });
+      const target = el._splitTarget || el;
+      el._split = SplitText.create(target, { type: 'lines', mask: 'lines', linesClass: 'split-line' });
       return el._split.lines || null;
     }
 
