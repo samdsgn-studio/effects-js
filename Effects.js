@@ -308,6 +308,8 @@ window.addEventListener("load", () => {
 
       // Conserva l'HTML originale per poterlo ripristinare dopo il feedback
       const originalHTML = inner.innerHTML;
+      // Conserva anche l'hover originale per poterlo ripristinare dopo il feedback
+      const originalHover = inner.getAttribute('data-hover');
 
       // Utility: risolve cosa copiare
       const RESOLVE_COPY_TEXT = () => {
@@ -343,24 +345,39 @@ window.addEventListener("load", () => {
         } catch(_) { return false; }
       };
 
-      // Feedback di copia: cambia momentaneamente il testo base e aggiorna l'hover a "copied"
+      // Feedback di copia: opzionalmente cambia l'hover se definito in data-copy-hover; poi ripristina
       const SHOW_FEEDBACK = (ok) => {
-        const copiedHoverLabel = el.getAttribute('data-copied-hover') || 'copied';
-        const copiedBaseText   = el.getAttribute('data-copied-text') || (ok ? '(mail copied)' : '(copy failed)');
+        // NUOVO: nessun hover di default. Se vuoi cambiare l'hover post-copy,
+        // imposta esplicitamente data-copy-hover="..." sull'elemento originale.
+        const hasCopyHover = el.hasAttribute('data-copy-hover');
+        const copiedHoverLabel = hasCopyHover ? el.getAttribute('data-copy-hover') : null;
 
-        // aggiorna permanentemente il testo di hover post-click
-        inner.setAttribute('data-hover', copiedHoverLabel);
+        // Testo base temporaneo (resta come prima; personalizzabile con data-copied-text)
+        const copiedBaseText = el.getAttribute('data-copied-text') || (ok ? '(mail copied)' : '(copy failed)');
 
-        // mostra feedback sul testo "base" per 1.4s poi ripristina
+        // Se richiesto, imposta temporaneamente l'hover su quanto specificato
+        if (copiedHoverLabel !== null) {
+          inner.setAttribute('data-hover', copiedHoverLabel);
+        }
+
+        // Mostra feedback sul testo base per 1.4s poi ripristina
         inner.innerHTML = copiedBaseText;
         clearTimeout(inner._copyT);
-        inner._copyT = setTimeout(() => { inner.innerHTML = originalHTML; }, 1400);
+        inner._copyT = setTimeout(() => {
+          inner.innerHTML = originalHTML;                 // ripristina contenuto base
+          if (copiedHoverLabel !== null) {
+            inner.setAttribute('data-hover', originalHover); // ripristina etichetta hover solo se l'avevamo cambiata
+          }
+          inner._copyLock = false;                        // sblocca click successivi
+        }, 1400);
       };
 
       const handleCopy = async (ev) => {
         // evita selezione testo indesiderata
         ev.preventDefault();
         ev.stopPropagation();
+        if (inner._copyLock) return;
+        inner._copyLock = true;
         const text = RESOLVE_COPY_TEXT();
         const ok = await DO_COPY(text);
         SHOW_FEEDBACK(ok);
