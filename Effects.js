@@ -382,6 +382,18 @@ window.addEventListener("load", () => {
       if (!window.SplitText) { console.error('SplitText not loaded for split-hover'); return; }
       if (gsap.registerPlugin && window.SplitText) { try { gsap.registerPlugin(SplitText); } catch(_){} }
 
+      // Inject minimal CSS to keep split lines inline with surrounding text (prevent brackets from jumping lines)
+      if (!document.querySelector('style[data-split-hover-style]')) {
+        const st = document.createElement('style');
+        st.setAttribute('data-split-hover-style', 'true');
+        st.textContent = `
+.split-ignore{display:inline-block;vertical-align:baseline;pointer-events:none}
+.split-target{display:inline-block;vertical-align:baseline}
+.split-line{display:inline-block;vertical-align:baseline}
+`;
+        document.head.appendChild(st);
+      }
+
       const nodes = document.querySelectorAll('[data-split-hover], [data-effect="split-hover"]');
       nodes.forEach(buildSplitOnHover);
     });
