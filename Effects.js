@@ -337,11 +337,11 @@ window.addEventListener("load", () => {
       gsap.set(lines, { willChange: 'transform' });
       gsap.to(lines, {
         keyframes: [
-          { y: -40, duration: 0.22, ease: 'power3.out' },
+          { y: -40, duration: 0.30, ease: 'power3.out' },
           { y:  40, duration: 0.0 }, // salto immediato sotto
-          { y:   0, duration: 0.22, ease: 'power3.out' }
+          { y:   0, duration: 0.35, ease: 'power3.out' }
         ],
-        stagger: 0.05,
+        stagger: 0.02,
         overwrite: 'auto',
         onComplete: () => gsap.set(lines, { clearProps: 'willChange' })
       });
@@ -353,7 +353,7 @@ window.addEventListener("load", () => {
       gsap.to(lines, {
         y: 0,
         autoAlpha: 1,
-        duration: 0.25,
+        duration: 0.40,
         ease: 'power2.out',
         overwrite: 'auto',
         clearProps: 'willChange'
