@@ -247,7 +247,93 @@ window.addEventListener("load", () => {
     ScrollTrigger.refresh();
   });
 });
-// ======= FINE SPLIT + COUNTER =======
+
+// ======= INIZIO SPLIT HOVER (solo hover, niente scroll/load) =======
+(function(){
+  function buildSplitOnHover(el){
+    if (el._splitHoverInit === '1') return; // evita doppio init
+    el._splitHoverInit = '1';
+
+    const hasOnce = el.getAttribute('data-split-hover') === 'once';
+
+    function ensureSplit(){
+      if (el._split && el._split.lines && el._split.lines.length) return el._split.lines;
+      if (!window.SplitText) return null;
+      try {
+        el._split && el._split.revert && el._split.revert();
+      } catch(_){}
+      el._split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' });
+      return el._split.lines || null;
+    }
+
+    function primeHiddenLines(lines){
+      if (!lines) return;
+      const maskPadAttr = el.getAttribute('mask-padding');
+      if (maskPadAttr && maskPadAttr.trim() !== '') {
+        gsap.set(lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity', paddingBottom: maskPadAttr });
+      } else {
+        gsap.set(lines, { y: 80, autoAlpha: 0, willChange: 'transform,opacity' });
+      }
+    }
+
+    function revealLines(lines){
+      if (!lines) return;
+      gsap.to(lines, {
+        y: 0,
+        autoAlpha: 1,
+        duration: 1.2,
+        ease: 'power4.out',
+        stagger: 0.08,
+        overwrite: 'auto',
+        clearProps: 'transform,opacity,willChange'
+      });
+    }
+
+    function hideLines(lines){
+      if (!lines) return;
+      gsap.to(lines, {
+        y: 80,
+        autoAlpha: 0,
+        duration: 0.6,
+        ease: 'power2.in',
+        overwrite: 'auto'
+      });
+    }
+
+    el.addEventListener('mouseenter', () => {
+      if (!window.gsap) { console.error('GSAP not loaded for split-hover'); return; }
+      if (!window.SplitText) { console.error('SplitText not loaded for split-hover'); return; }
+      const lines = ensureSplit();
+      primeHiddenLines(lines);
+      revealLines(lines);
+    });
+
+    el.addEventListener('mouseleave', () => {
+      if (hasOnce) return; // se richiesto solo-una-volta, resta visibile
+      if (!window.gsap || !el._split) return;
+      hideLines(el._split.lines);
+    });
+  }
+
+  function initSplitHover(){
+    (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function(){
+      if (!window.gsap) { console.error('GSAP not loaded for split-hover'); return; }
+      // SplitText è opzionale ma richiesto per questo effetto
+      if (!window.SplitText) { console.error('SplitText not loaded for split-hover'); return; }
+      if (gsap.registerPlugin && window.SplitText) { try { gsap.registerPlugin(SplitText); } catch(_){} }
+
+      const nodes = document.querySelectorAll('[data-split-hover], [data-effect="split-hover"]');
+      nodes.forEach(buildSplitOnHover);
+    });
+  }
+
+  // Inizializza appena il DOM è disponibile (niente scroll/load trigger)
+  document.addEventListener('DOMContentLoaded', initSplitHover);
+  // In caso di Designer/Preview reload
+  document.addEventListener('webflow:load', initSplitHover);
+})();
+// ======= FINE SPLIT HOVER =======
+
 
 
 // ======= INIZIO EFFETTO MASK IMAGE =======
