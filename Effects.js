@@ -272,6 +272,7 @@ window.addEventListener("load", () => {
 .slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
 .slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
 .slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
+.slide-in-bottom[data-copy]{cursor:pointer}
 `;
     document.head.appendChild(st);
   }
@@ -295,6 +296,80 @@ window.addEventListener("load", () => {
     const inner = document.createElement('span');
     inner.className = 'slide-in-bottom__inner';
     inner.setAttribute('data-hover', hoverText);
+
+    // Se il nodo originale ha data-copy, abilita la copia su click/keyboard
+    const copyAttrRaw = el.getAttribute('data-copy');
+    if (copyAttrRaw !== null) {
+      // Propaga attribute sul wrapper per styling (cursor)
+      outer.setAttribute('data-copy', copyAttrRaw);
+
+      // Conserva l'HTML originale per poterlo ripristinare dopo il feedback
+      const originalHTML = inner.innerHTML;
+
+      // Utility: risolve cosa copiare
+      const RESOLVE_COPY_TEXT = () => {
+        const v = (copyAttrRaw || '').trim().toLowerCase();
+        if (v === '' || v === 'content' || v === '(content)') {
+          // copia il contenuto "base" attuale (senza il ::before dell'hover)
+          // Usa textContent per evitare markup
+          return el.textContent.trim();
+        }
+        return copyAttrRaw; // valore esplicito (es: email)
+      };
+
+      // Utility: esegue la copia con fallback
+      const DO_COPY = async (text) => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch(_){}
+        // Fallback legacy
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'absolute';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return !!ok;
+        } catch(_) { return false; }
+      };
+
+      // Feedback di copia: cambia momentaneamente il testo base e aggiorna l'hover a "copied"
+      const SHOW_FEEDBACK = (ok) => {
+        const copiedHoverLabel = el.getAttribute('data-copied-hover') || 'copied';
+        const copiedBaseText   = el.getAttribute('data-copied-text') || (ok ? '(mail copied)' : '(copy failed)');
+
+        // aggiorna permanentemente il testo di hover post-click
+        inner.setAttribute('data-hover', copiedHoverLabel);
+
+        // mostra feedback sul testo "base" per 1.4s poi ripristina
+        inner.innerHTML = copiedBaseText;
+        clearTimeout(inner._copyT);
+        inner._copyT = setTimeout(() => { inner.innerHTML = originalHTML; }, 1400);
+      };
+
+      const handleCopy = async (ev) => {
+        // evita selezione testo indesiderata
+        ev.preventDefault();
+        ev.stopPropagation();
+        const text = RESOLVE_COPY_TEXT();
+        const ok = await DO_COPY(text);
+        SHOW_FEEDBACK(ok);
+      };
+
+      // Click del mouse
+      outer.addEventListener('click', handleCopy);
+      // Accessibilità tastiera: Enter/Space
+      outer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { handleCopy(e); }
+      });
+    }
 
     // Sposta tutti i child esistenti dentro inner per preservare eventuale markup
     while (el.firstChild) inner.appendChild(el.firstChild);
