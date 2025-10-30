@@ -345,30 +345,21 @@ window.addEventListener("load", () => {
         } catch(_) { return false; }
       };
 
-      // Feedback di copia: opzionalmente cambia l'hover se definito in data-copy-hover; poi ripristina
+      // Feedback di copia: cambia momentaneamente il testo base e l'hover, poi ripristina
       const SHOW_FEEDBACK = (ok) => {
-        // NUOVO: nessun hover di default. Se vuoi cambiare l'hover post-copy,
-        // imposta esplicitamente data-copy-hover="..." sull'elemento originale.
-        const hasCopyHover = el.hasAttribute('data-copy-hover');
-        const copiedHoverLabel = hasCopyHover ? el.getAttribute('data-copy-hover') : null;
+        const copiedHoverLabel = el.getAttribute('data-copied-hover') || 'copied';
+        const copiedBaseText   = el.getAttribute('data-copied-text') || (ok ? '(copied)' : '(copy failed)');
 
-        // Testo base temporaneo (resta come prima; personalizzabile con data-copied-text)
-        const copiedBaseText = el.getAttribute('data-copied-text') || (ok ? '(mail copied)' : '(copy failed)');
+        // imposta temporaneamente l'hover su "copied"
+        inner.setAttribute('data-hover', copiedHoverLabel);
 
-        // Se richiesto, imposta temporaneamente l'hover su quanto specificato
-        if (copiedHoverLabel !== null) {
-          inner.setAttribute('data-hover', copiedHoverLabel);
-        }
-
-        // Mostra feedback sul testo base per 1.4s poi ripristina
+        // mostra feedback sul testo base per 1.4s poi ripristina
         inner.innerHTML = copiedBaseText;
         clearTimeout(inner._copyT);
         inner._copyT = setTimeout(() => {
-          inner.innerHTML = originalHTML;                 // ripristina contenuto base
-          if (copiedHoverLabel !== null) {
-            inner.setAttribute('data-hover', originalHover); // ripristina etichetta hover solo se l'avevamo cambiata
-          }
-          inner._copyLock = false;                        // sblocca click successivi
+          inner.innerHTML = originalHTML;            // ripristina contenuto base
+          inner.setAttribute('data-hover', originalHover); // ripristina etichetta hover
+          inner._copyLock = false;                   // sblocca click successivi
         }, 1400);
       };
 
