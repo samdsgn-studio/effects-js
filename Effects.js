@@ -268,16 +268,11 @@ window.addEventListener("load", () => {
     const st = document.createElement('style');
     st.setAttribute('data-split-hover-style', 'true');
     st.textContent = `
-.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden;padding-block:.12em}
-.slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0);line-height:1.2}
-.slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:calc(100% + .06em);transform:translate3d(0,0,0);line-height:1.2}
+.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden}
+.slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
+.slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
 .slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
 .slide-in-bottom[data-copy]{cursor:pointer}
-/* programmatic control to mimic hover for copy feedback */
-.slide-in-bottom.force-hover .slide-in-bottom__inner{transform:translateY(-100%)}
-.slide-in-bottom.force-normal .slide-in-bottom__inner{transform:translateY(0)}
-/* extend duration during copy feedback */
-.slide-in-bottom.is-copying .slide-in-bottom__inner{transition-duration:1.5s}
 `;
     document.head.appendChild(st);
   }
@@ -301,6 +296,9 @@ window.addEventListener("load", () => {
     const inner = document.createElement('span');
     inner.className = 'slide-in-bottom__inner';
     inner.setAttribute('data-hover', hoverText);
+
+    // Sposta tutti i child esistenti dentro inner per preservare eventuale markup
+    while (el.firstChild) inner.appendChild(el.firstChild);
 
     // Se il nodo originale ha data-copy, abilita la copia su click/keyboard
     const copyAttrRaw = el.getAttribute('data-copy');
@@ -345,63 +343,18 @@ window.addEventListener("load", () => {
         } catch(_) { return false; }
       };
 
-      // Feedback di copia: mostra il messaggio tramite lo stesso effetto di slide
+      // Feedback di copia: cambia momentaneamente il testo base e aggiorna l'hover a "copied"
       const SHOW_FEEDBACK = (ok) => {
         const copiedHoverLabel = el.getAttribute('data-copied-hover') || 'copied';
         const copiedBaseText   = el.getAttribute('data-copied-text') || (ok ? '(mail copied)' : '(copy failed)');
 
-        // Stato corrente hover
-        const wasHover = outer.matches(':hover');
+        // aggiorna permanentemente il testo di hover post-click
+        inner.setAttribute('data-hover', copiedHoverLabel);
 
-        // Durante il feedback usiamo ::before per mostrare il testo copiato,
-        // così non tocchiamo l'HTML base ed evitiamo layout shift.
-        const prevHoverText = inner.getAttribute('data-hover');
-
-        // Imposta durata estesa e forza lo slide
-        outer.classList.add('is-copying');
-        inner.setAttribute('data-hover', copiedBaseText);
-
-        // Sequenza: assicura transizione anche se eravamo già in hover
-        //  - se eravamo già in hover, forziamo prima lo stato normale e poi hover
-        //  - se non eravamo in hover, forziamo direttamente hover
-        if (wasHover) {
-          outer.classList.add('force-normal');
-          // next frame → vai ad hover per animare l'entrata del messaggio
-          requestAnimationFrame(() => {
-            outer.classList.remove('force-normal');
-            outer.classList.add('force-hover');
-          });
-        } else {
-          outer.classList.add('force-hover');
-        }
-
-        // Dopo 1.5s, ripristina i testi e torna allo stato appropriato con lo stesso effetto
+        // mostra feedback sul testo "base" per 1.4s poi ripristina
+        inner.innerHTML = copiedBaseText;
         clearTimeout(inner._copyT);
-        inner._copyT = setTimeout(() => {
-          // L'hover standard diventa "copied" per i passaggi successivi
-          inner.setAttribute('data-hover', copiedHoverLabel);
-
-          // Decidi stato finale in base all'hover corrente
-          const stillHover = outer.matches(':hover');
-
-          if (stillHover) {
-            // Rimani in hover: forziamo un passaggio a normal e ritorno ad hover per avere l'effetto di rientro
-            outer.classList.add('force-normal');
-            requestAnimationFrame(() => {
-              outer.classList.remove('force-normal');
-              outer.classList.add('force-hover');
-            });
-          } else {
-            // Torna allo stato normale
-            outer.classList.remove('force-hover');
-            outer.classList.add('force-normal');
-            // Rimuovi la forzatura dopo la transizione così torna al controllo nativo :hover
-            setTimeout(() => { outer.classList.remove('force-normal'); }, 1550);
-          }
-
-          // Rimuovi durata estesa a fine ciclo
-          setTimeout(() => { outer.classList.remove('is-copying'); }, 1550);
-        }, 1500);
+        inner._copyT = setTimeout(() => { inner.innerHTML = originalHTML; }, 1400);
       };
 
       const handleCopy = async (ev) => {
@@ -420,9 +373,6 @@ window.addEventListener("load", () => {
         if (e.key === 'Enter' || e.key === ' ') { handleCopy(e); }
       });
     }
-
-    // Sposta tutti i child esistenti dentro inner per preservare eventuale markup
-    while (el.firstChild) inner.appendChild(el.firstChild);
 
     outer.appendChild(inner);
     el.appendChild(outer);
