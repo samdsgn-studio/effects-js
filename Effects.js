@@ -274,15 +274,30 @@ window.addEventListener("load", () => {
     function revealLines(lines){
       if (!lines) return;
       gsap.killTweensOf(lines);
-      gsap.to(lines, {
+      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+      // 1) Esci verso l'alto
+      tl.to(lines, {
         y: -40,
         duration: 0.55,
         ease: 'power3.out',
-        stagger: 0.06,
-        yoyo: true,
-        repeat: 1,
-        overwrite: 'auto',
-        onComplete: () => gsap.set(lines, { y: 0, autoAlpha: 1, clearProps: 'willChange' })
+        stagger: 0.06
+      })
+      // 2) Ritorna alla posizione iniziale
+      .to(lines, {
+        y: 0,
+        duration: 0.55,
+        ease: 'power3.inOut',
+        stagger: 0.06
+      })
+      // 3) Attendi 0.2s e rientra da sotto
+      .add('+=0.2')
+      .set(lines, { y: 40, autoAlpha: 1, willChange: 'transform' })
+      .to(lines, {
+        y: 0,
+        duration: 0.45,
+        ease: 'power2.out',
+        stagger: 0.04,
+        onComplete: () => gsap.set(lines, { clearProps: 'willChange' })
       });
     }
 
