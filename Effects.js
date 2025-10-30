@@ -397,10 +397,29 @@ window.addEventListener("load", () => {
     injectStyle();
     const nodes = document.querySelectorAll('[data-split-hover], [data-effect="split-hover"]');
     nodes.forEach(build);
+    // Auto-init per nodi futuri
+    try {
+      if (!window.__splitHoverMO__) {
+        window.__splitHoverMO__ = new MutationObserver((muts)=>{
+          muts.forEach(m => {
+            m.addedNodes && m.addedNodes.forEach(node => {
+              if (!(node instanceof Element)) return;
+              if (node.matches && (node.matches('[data-split-hover]') || node.matches('[data-effect="split-hover"]'))) build(node);
+              node.querySelectorAll && node.querySelectorAll('[data-split-hover], [data-effect="split-hover"]').forEach(build);
+            });
+          });
+        });
+        window.__splitHoverMO__.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    } catch(_){}
   }
 
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('webflow:load', init);
+  window.addEventListener('load', init, { once: true });
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(init, 300);
+  }
 })();
 // ======= FINE SPLIT HOVER =======
 
