@@ -661,7 +661,7 @@ window.addEventListener("load", () => {
 })();
 // ======= FINE FADE FROM TOP =======
 
-
+// ======= INIZIO ANIMATE LINE =======
 // ======= INIZIO ANIMATE LINE =======
 (function(){
   function initAnimateLine(){
@@ -813,6 +813,8 @@ window.addEventListener("load", () => {
   window.addEventListener('load', initAnimateLine);
 })();
 // ======= FINE ANIMATE LINE =======
+
+
 
 
 // ======= INIZIO FADE IN =======
