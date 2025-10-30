@@ -268,7 +268,8 @@ window.addEventListener("load", () => {
     const st = document.createElement('style');
     st.setAttribute('data-split-hover-style', 'true');
     st.textContent = `
-.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden;padding-bottom:0.12em}
+.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden}
+.slide-in-bottom::after{content:"";display:block;height:var(--split-hover-mask,0.16em)}
 .slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
 .slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
 .slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
@@ -297,10 +298,10 @@ window.addEventListener("load", () => {
     inner.className = 'slide-in-bottom__inner';
     inner.setAttribute('data-hover', hoverText);
 
-    // Optional: override padding mask via attribute
+    // Optional: override mask spacer via CSS variable
     const maskPadAttr = el.getAttribute('data-mask-pad') || el.getAttribute('mask-pad');
     if (maskPadAttr && maskPadAttr.trim() !== '') {
-      outer.style.paddingBottom = maskPadAttr;
+      outer.style.setProperty('--split-hover-mask', maskPadAttr);
     }
 
     // Sposta tutti i child esistenti dentro inner per preservare eventuale markup
