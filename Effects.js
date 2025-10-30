@@ -268,8 +268,7 @@ window.addEventListener("load", () => {
     const st = document.createElement('style');
     st.setAttribute('data-split-hover-style', 'true');
     st.textContent = `
-.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden}
-.slide-in-bottom::after{content:"";display:block;height:var(--split-hover-mask,0.16em)}
+.slide-in-bottom{position:relative;display:inline-block;white-space:nowrap;overflow:hidden;padding:0 4px;line-height:1.5;height:1em}
 .slide-in-bottom__inner{position:relative;display:inline-block;transition:transform .3s;transform:translate3d(0,0,0)}
 .slide-in-bottom__inner::before{content:attr(data-hover);position:absolute;left:0;top:100%;transform:translate3d(0,0,0)}
 .slide-in-bottom:hover .slide-in-bottom__inner, .slide-in-bottom:focus-visible .slide-in-bottom__inner{transform:translateY(-100%)}
