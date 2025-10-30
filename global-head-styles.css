@@ -12,3 +12,39 @@
    Include lo stile di rientro tipografico (.rientro / .first-line-indent)
    da utilizzare nei paragrafi o nei blocchi di testo.
 */
+
+/* ===============================
+   ANIMATED UNDERLINE (.animate-line2)
+   =============================== */
+
+/* Link diretti o link dentro wrapper .animate-line2 */
+a.animate-line2,
+.animate-line2 a:not(.w-button):not([class*="button"]):not([role="button"]) {
+  text-decoration: none !important;
+  color: inherit !important;
+  display: inline !important;
+
+  background-image: linear-gradient(currentColor, currentColor) !important;
+  background-repeat: no-repeat !important;
+  background-position: bottom left !important;
+  background-size: 0% 0.12em !important;
+  transition: background-size 0.45s ease-in-out !important;
+
+  font: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Hover/focus: espande la linea da sinistra a destra */
+a.animate-line2:hover,
+a.animate-line2:focus-visible,
+.animate-line2 a:hover:not(.w-button):not([class*="button"]):not([role="button"]),
+.animate-line2 a:focus-visible:not(.w-button):not([class*="button"]):not([role="button"]) {
+  background-size: 100% 0.12em !important;
+  color: inherit !important;
+}
+
+/* Evita underline “incollata” su tap mobile */
+a.animate-line2:focus:not(:focus-visible),
+.animate-line2 a:focus:not(:focus-visible) {
+  background-size: 0% 0.12em !important;
+}
