@@ -385,18 +385,25 @@ window.addEventListener("load", () => {
       // Feedback di copia: cambia momentaneamente il testo base e l'hover, poi ripristina
       const SHOW_FEEDBACK = (ok) => {
         const copiedHoverLabel = el.getAttribute('data-copied-hover') || 'copied';
-        const copiedBaseText   = el.getAttribute('data-copied-text') || (ok ? '(copied)' : '(copy failed)');
+        const hasCopiedBaseText = el.hasAttribute('data-copied-text');
+        const copiedBaseText = hasCopiedBaseText ? el.getAttribute('data-copied-text') : null;
 
-        // imposta temporaneamente l'hover su "copied"
+        // imposta temporaneamente l'hover (etichetta sopra) su quello personalizzato
         inner.setAttribute('data-hover', copiedHoverLabel);
 
-        // mostra feedback sul testo base per 1.4s poi ripristina
-        inner.innerHTML = copiedBaseText;
+        // se NON è stato definito data-copied-text, non toccare il contenuto base
         clearTimeout(inner._copyT);
+        if (copiedBaseText !== null) {
+          inner.innerHTML = copiedBaseText;
+        }
+
         inner._copyT = setTimeout(() => {
-          inner.innerHTML = originalHTML;            // ripristina contenuto base
-          inner.setAttribute('data-hover', originalHover); // ripristina etichetta hover
-          inner._copyLock = false;                   // sblocca click successivi
+          // ripristina solo se avevamo modificato il contenuto base
+          if (copiedBaseText !== null) {
+            inner.innerHTML = originalHTML;
+          }
+          inner.setAttribute('data-hover', originalHover);
+          inner._copyLock = false;
         }, 1400);
       };
 
