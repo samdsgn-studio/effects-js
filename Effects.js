@@ -274,7 +274,6 @@ window.addEventListener("load", () => {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
-  padding: 0 4px;
   line-height: 1.1em;
   height: 1.1em;
   vertical-align: baseline;
