@@ -30,7 +30,6 @@ a.animate-line2,
   background-size: 0% 0.12em !important;
   transition: background-size 0.45s ease-in-out !important;
 
-  font: inherit !important;
   line-height: inherit !important;
 }
 
