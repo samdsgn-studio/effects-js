@@ -48,3 +48,17 @@ a.animate-line2:focus:not(:focus-visible),
 .animate-line2 a:focus:not(:focus-visible) {
   background-size: 0% 0.12em !important;
 }
+
+/* ===============================
+   GLOBAL CURSOR FIX
+   =============================== */
+a,
+button,
+.w-inline-block,
+[role="button"],
+[onclick],
+[data-click],
+.clickable {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
