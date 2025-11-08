@@ -274,16 +274,16 @@ window.addEventListener("load", () => {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
-  line-height: 1.1em;
-  height: 1.1em;
+  line-height: 1.2em;
+  height: 1.2em;
   vertical-align: baseline;
 }
 
 .slide-in-bottom__inner {
   position: relative;
   display: inline-block;
-  line-height: 1.1em; /* forziamo anche qui per evitare override */
-  height: 1.1em;
+  line-height: 1.2em; /* forziamo anche qui per evitare override */
+  height: 1.2em;
   transition: transform .3s;
   transform: translate3d(0,0,0);
 }
