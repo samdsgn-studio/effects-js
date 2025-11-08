@@ -668,7 +668,6 @@ window.addEventListener("load", () => {
 // ======= FINE FADE FROM TOP =======
 
 // ======= INIZIO ANIMATE LINE =======
-// ======= INIZIO ANIMATE LINE =======
 (function(){
   function initAnimateLine(){
     if (document.querySelector('style[data-animate-line]')) return; // evita doppio inserimento
@@ -1032,6 +1031,216 @@ window.addEventListener("load", () => {
   });
 })();
 // ======= FINE FADE IN =======
+
+// ======= INIZIO FADE IN2 =======
+(function(){
+  function getDir(el){
+    if (el.hasAttribute('data-bottom') || el.hasAttribute('bottom')) return 'bottom';
+    if (el.hasAttribute('data-left')   || el.hasAttribute('left'))   return 'left';
+    if (el.hasAttribute('data-right')  || el.hasAttribute('right'))  return 'right';
+    // default: come "fade-from-top"
+    return 'top';
+  }
+
+  function primeHidden(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
+    if (isOverlay) {
+      // Overlay: no transform, only opacity; ensure on top immediately
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5 });
+      gsap.set(el, { autoAlpha: 0 });
+      return;
+    }
+
+    // For blend: keep the element visible and prepare the blend child to fade via filter
+    if (isBlend) {
+      // prime the blend child filter; keep wrapper visible to preserve blending
+      gsap.set(blendNode, { filter: 'brightness(0)' });
+      // Also prime movement like normal so the wrapper can animate position
+      const dir = getDir(el);
+      const base = { autoAlpha: 1, willChange: 'transform,opacity,filter' };
+      if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+      if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+      if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
+      gsap.set(el, { ...base, yPercent: -20 });
+      return;
+    }
+
+    // Default prime (no overlay/blend)
+    const dir = getDir(el);
+    const base = { autoAlpha: 0, willChange: 'transform,opacity' };
+    if (dir === 'left')  { gsap.set(el, { ...base, xPercent: -20 }); return; }
+    if (dir === 'right') { gsap.set(el, { ...base, xPercent:  20 }); return; }
+    if (dir === 'bottom'){ gsap.set(el, { ...base, yPercent:  20 }); return; }
+    gsap.set(el, { ...base, yPercent: -20 });
+  }
+
+  function primeShown(el){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
+    if (isOverlay) {
+      const overlayNode = el;
+      gsap.set(overlayNode, { zIndex: 5 });
+      gsap.set(el, { autoAlpha: 1 });
+      return;
+    }
+
+    if (isBlend) {
+      // If already in viewport, show fully and reset filter
+      gsap.set(blendNode, { filter: 'none' });
+      gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity,filter' });
+      gsap.set(blendNode, { mixBlendMode: 'difference' });
+      return;
+    }
+
+    gsap.set(el, { autoAlpha: 1, xPercent: 0, yPercent: 0, willChange: 'transform,opacity' });
+  }
+
+  function animateToVisible(el, extraDelay = 0){
+    const isOverlay = el.hasAttribute('data-overlay') || el.closest('[data-overlay]') || el.querySelector('[data-overlay]');
+    const blendNode = el.matches('[data-blend]') ? el : el.querySelector('[data-blend]');
+    const isBlend = !!blendNode;
+
+    const delayAttr = el.getAttribute('data-delay') || el.getAttribute('delay');
+    const delay = (parseFloat(delayAttr) || 0) + (extraDelay || 0);
+
+    if (isOverlay) {
+      // Overlay: fade only opacity on the element itself, no transform
+      gsap.to(el, {
+        autoAlpha: 1,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
+
+    if (isBlend) {
+      // Blend: animate the blend child via filter while running normal movement on the wrapper
+      gsap.fromTo(blendNode, { filter: 'brightness(0)' }, {
+        filter: 'brightness(1)',
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false,
+        onComplete: () => {
+          gsap.set(blendNode, { filter: 'none' });
+          gsap.set(blendNode, { mixBlendMode: 'difference' });
+        }
+      });
+      // proceed with movement on the element (no opacity fade needed, keep autoAlpha:1)
+      const dir = getDir(el);
+      gsap.to(el, {
+        autoAlpha: 1,
+        xPercent: 0,
+        yPercent: 0,
+        duration: 1.7,
+        ease: 'power4.out',
+        delay,
+        overwrite: 'auto',
+        immediateRender: false
+      });
+      return;
+    }
+
+    // Default behavior
+    const dir = getDir(el);
+    gsap.to(el, {
+      autoAlpha: 1,
+      xPercent: 0,
+      yPercent: 0,
+      duration: 1.7,
+      ease: 'power4.out',
+      delay,
+      overwrite: 'auto',
+      immediateRender: false
+    });
+  }
+
+  window.addEventListener("load", () => {
+    (window.__EFFECTS_LIBS_READY__ || Promise.resolve()).then(function () {
+      if (!window.gsap) { console.error("GSAP not loaded for fade-in2"); return; }
+      if (!window.ScrollTrigger) { console.error("ScrollTrigger not loaded for fade-in2"); return; }
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      // Stato iniziale per-element: se già in viewport al load, lascialo rivelato, altrimenti nascondi
+      const fadeEls = gsap.utils.toArray('.fade-in2');
+      fadeEls.forEach((el) => {
+        // se ha attributo load, verrà animato subito dopo il priming: in ogni caso prime come nascosto
+        const isLoad = el.hasAttribute('data-load') || el.hasAttribute('load');
+        if (isLoad) {
+          primeHidden(el);
+          return;
+        }
+
+        if (ScrollTrigger.isInViewport(el, 0.01)) {
+          // già (anche solo un po') in viewport: mostrato per evitare flicker
+          primeShown(el);
+          el.dataset.fadeInPrimed = '1';
+        } else {
+          primeHidden(el);
+        }
+      });
+
+      // Animazione immediata per gli elementi che richiedono avvio al load
+      const loadNodes = fadeEls.filter(el => el.hasAttribute('data-load') || el.hasAttribute('load'));
+      loadNodes.forEach((el, i) => {
+        // Stagger configurabile per gli elementi che partono al load
+        const staggerAttr = el.getAttribute('data-stagger') || el.getAttribute('stagger');
+        const stagger = Number.isFinite(parseFloat(staggerAttr)) ? parseFloat(staggerAttr) : 0.25; // default 0.25s
+        animateToVisible(el, i * stagger);
+        el.dataset.fadeInDone = '1';
+      });
+
+      // Animazione batch con stesso trigger pattern di img-reveal
+      ScrollTrigger.batch(".fade-in2", {
+        start: "top 95%",
+        end: "bottom top",
+        onEnter: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return; // già visibile, evita nuova animazione
+            const perItemDelay = i * 0.25;
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onEnterBack: (batch) => {
+          const nodes = batch.filter(el => el.dataset.fadeInDone !== '1' && !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach((el, i) => {
+            if (el.dataset.fadeInPrimed === '1') return;
+            const perItemDelay = i * 0.25;
+            animateToVisible(el, perItemDelay);
+          });
+        },
+        onLeave: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        },
+        onLeaveBack: (batch) => {
+          const nodes = batch.filter(el => !(el.hasAttribute('data-load') || el.hasAttribute('load')));
+          if (!nodes.length) return;
+          nodes.forEach(primeHidden);
+        }
+      });
+
+      ScrollTrigger.refresh();
+    });
+  });
+})();
+// ======= FINE FADE IN2 =======
 
 // ======= INIZIO FADE IN (SYNC) =======
 (function(){
